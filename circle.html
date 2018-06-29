@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+    svg {
+        background-color: gray;
+    }
+</style>
+<script src="d3.v3.js"></script>
+<body>
+    <svg width="1000" height="500"></svg>
+
+<script>
+var width = 1000,
+    height = 500,
+    radius = Math.min(width, height) * 0.5;
+
+var visu = d3.select("svg")
+visu
+    .append("g")
+    .attr("class", "visu")
+visu
+    .append("g")
+    .attr("class", "arrows")
+
+// Starting draw point in the svg
+visu.selectAll("g")
+    .attr("transform", "translate(" + width / 4 + "," + height / 2 + ")");
+
+// Draw circle
+visu.select("g.visu")
+    .append("circle")
+    .attr("class", "circle")
+    .attr("y1", -(radius * 0.8))
+    .attr("y2", (radius * 0.8))
+    .attr("r", (radius * 0.8))
+    .style("fill", "none")
+    .style("stroke", "blue")
+    .style("stroke-width", "5px")
+
+mydatas = [
+    { "angle": 0, "replica": 0},
+    { "angle": 120, "replica": 1 },
+    { "angle": 240, "replica": 2 }
+]
+
+function cosDegree(degrees) {
+    return Math.cos( degrees * Math.PI / 180);
+}
+function sinDegree(degrees) {
+    return Math.sin( degrees * Math.PI / 180);
+}
+
+change(mydatas);
+function change(data) {
+    var arrow = visu.select(".arrows").selectAll("g.dline")
+        .data(data, function(d) {return d.angle; });
+
+
+    arrow.enter()
+        .insert("g")
+        .attr("class", "angleSweep")
+        .append("line")
+        .attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", function(d) { return cosDegree(d.angle) * radius; })
+        .attr("y2", function(d) { return sinDegree(d.angle) * radius; })
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-width", "2px")
+
+    arrow.exit()
+        .remove();
+
+}
+</script> 
+
+</body>
+</html>
