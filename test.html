@@ -60,7 +60,9 @@
         cursor: pointer;
     }
 </style>
-<script src="d3.v3.js"></script>
+<script src="js/d3.v3.js"></script>
+<script src="js/formatInput.js"></script>
+<script src="js/computeInfos.js"></script>
 <!-- }}} -->
 
 <body>
@@ -81,10 +83,18 @@
 <script>
 
 /* ------- Global variables to use {{{-------*/
-// Palet of colors to use
-//var colorsAvailable = d3.schemeSet1.concat(d3.schemeSet2).concat(d3.schemeSet3); // Schemes appear in d3.v4.js
+/**
+ *  Palet of colors to use
+ * SchemeSets appear in d3.v4.js
+ * var colorsAvailable = d3.schemeSet1.concat(d3.schemeSet2).concat(d3.schemeSet3);
+ */
 var colorsAvailable = [
-"#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#a65628","#f781bf","#999999","#66c2a5","#fc8d62","#8da0cb","#e78ac3","#a6d854","#ffd92f","#e5c494","#b3b3b3","#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd","#ccebc5","#ffed6f"
+    "#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00",
+    "#a65628","#f781bf","#999999","#66c2a5","#fc8d62",
+    "#8da0cb","#e78ac3","#a6d854","#ffd92f","#e5c494",
+    "#b3b3b3","#8dd3c7","#ffffb3","#bebada","#fb8072",
+    "#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9",
+    "#bc80bd","#ccebc5","#ffed6f"
 ]
 var width = 800,
     height = 800,
@@ -93,7 +103,6 @@ var width = 800,
     centerh = height / 2;
 
 var legendwidth = (width - 5) * 0.5 + "px";
-
 /* ------- END: Global variables to use }}}-------*/
 /* ------- DOM Selection {{{-------*/
 // our SVG to place the pie chart
@@ -115,7 +124,7 @@ var tooltip = d3.select("div.tooltip");
 /* ------- Standard configurations and function definitions {{{-------*/
 var pie = d3.layout.pie()
 	.sort(null)
-	.value(function(d) { return d.keysize; });
+	.value(function(d) { return parseInt(d.keysize) });
 
 var arc = d3.svg.arc()          // slices configuration
     .cornerRadius(5)            // rounding the slices
@@ -127,197 +136,11 @@ var outerArc = d3.svg.arc()
 	.innerRadius(Radius * 0.9)
 	.outerRadius(Radius * 0.9);
 
-function hexPadded(num, len) {
-    str = num.toString(16);
-    return "0".repeat(len - str.length) + str;
-}
-
 // Starting draw point in the svg
 RingImg.attr("transform", "translate(" + centerw + "," + centerh + ")");
 /* ------- END: Standard function definitions and configurations }}}-------*/
-/* ------- Other functions {{{-------*/
-function sortKeys(obj) { // {{{
-    return obj.sort(function(a, b) {
-        return d3.ascending(a.key, b.key);
-    });
-} // }}}
-function reduceName(a) { // {{{
-    var aa = a.indexOf("-");
-    var ab = a.lastIndexOf("-");
-    var ac = a.substring(aa + 1, ab).replace(/\./g, '_');
-    return ac.replace(/:/g, "-");
-} // }}}
-function writeLegend(data) { // {{{
-    var text = legend.selectAll("div.server")
-        .data(data, function(d) { return d.hostname+d.percs;});
-
-    text
-        .enter()
-        .append("div")
-        .attr("class", "server")
-        .style("width", 500)
-        .style("border-top", function(d) { return "4px solid " + d.color; })
-        .style("border-left", function(d) { return "2px solid " + d.color; })
-        .append("span")
-        .text(function(d) { return d.hostname; })
-        .append("span")
-        .attr("class", "ringspace")
-        .text(function(d) { 
-            return " | Ring space: " + d3.format(".2%")(d.percs);
-        });
-
-    text.exit()
-        .remove();
-}; // }}}
-/* ------- Other functions }}}-------*/
 
 /* ------- Reformating the input -------*/
-// Raw input {{{
-var ringKeyExample = `
-supervisor nodeAssignId META SERVER-2 8092 CBDA12F6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA80
-supervisor nodeAssignId META SERVER-2 8093 6AAAAAAB55555555555555555555555555555579
-supervisor nodeAssignId META SERVER-2 8094 4E38E38EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA79
-supervisor nodeAssignId META SERVER-3 8092 9C71C71D00000000000000000000000000000079
-supervisor nodeAssignId META SERVER-3 8094 1A12F68500000000000000000000000000000080
-supervisor nodeAssignId META SERVER-3 8095 0000000000000000000000000000000000000079
-supervisor nodeAssignId META SERVER-4 8092 638E38E455555555555555555555555555555579
-supervisor nodeAssignId META SERVER-4 8094 5097B426AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA80
-supervisor nodeAssignId META SERVER-4 8095 071C71C700000000000000000000000000000080
-supervisor nodeAssignId META SERVER-5 8092 9A12F68500000000000000000000000000000080
-supervisor nodeAssignId META SERVER-5 8094 7684BDA155555555555555555555555555555580
-supervisor nodeAssignId META SERVER-5 8095 25ED097C00000000000000000000000000000080
-supervisor nodeAssignId META SERVER-17 8092 65ED097B55555555555555555555555555555580
-supervisor nodeAssignId META SERVER-17 8094 17B425ED00000000000000000000000000000080
-supervisor nodeAssignId META SERVER-17 8095 04BDA13000000000000000000000000000000080
-supervisor nodeAssignId META SERVER-18 8092 612F684C55555555555555555555555555555580
-supervisor nodeAssignId META SERVER-18 8094 2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA79
-supervisor nodeAssignId META SERVER-18 8095 0E38E38F00000000000000000000000000000079
-supervisor nodeAssignId META SERVER-6 8092 5A12F68555555555555555555555555555555580
-supervisor nodeAssignId META SERVER-6 8094 1C71C71D00000000000000000000000000000080
-supervisor nodeAssignId META SERVER-6 8095 1555555600000000000000000000000000000079
-supervisor nodeAssignId META SERVER-7 8092 A84BDA1300000000000000000000000000000080
-supervisor nodeAssignId META SERVER-7 8094 44BDA12FAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA80
-supervisor nodeAssignId META SERVER-7 8095 3B425ED0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA80
-supervisor nodeAssignId META SERVER-8 8093 8000000000000000000000000000000000000079
-supervisor nodeAssignId META SERVER-8 8094 5C71C71C55555555555555555555555555555579
-supervisor nodeAssignId META SERVER-8 8095 3DA12F68AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA80
-supervisor nodeAssignId META SERVER-9 8092 84BDA13000000000000000000000000000000080
-supervisor nodeAssignId META SERVER-9 8095 12F684BE00000000000000000000000000000080
-supervisor nodeAssignId META SERVER-19 8092 C4BDA12FAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA80
-supervisor nodeAssignId META SERVER-19 8094 78E38E3955555555555555555555555555555579
-supervisor nodeAssignId META SERVER-19 8095 212F684C00000000000000000000000000000080
-supervisor nodeAssignId META SERVER-20 8092 897B425F00000000000000000000000000000080
-supervisor nodeAssignId META SERVER-20 8093 71C71C7255555555555555555555555555555579
-supervisor nodeAssignId META SERVER-20 8094 40000000AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA79
-supervisor nodeAssignId META SERVER-20 8095 025ED09800000000000000000000000000000080
-supervisor nodeAssignId META SERVER-14 8085 A38E38E400000000000000000000000000000079
-supervisor nodeAssignId META SERVER-14 8089 1ED097B400000000000000000000000000000080
-supervisor nodeAssignId META SERVER-14 8090 A5ED097C00000000000000000000000000000080
-supervisor nodeAssignId META SERVER-14 8091 9097B42600000000000000000000000000000080
-supervisor nodeAssignId META SERVER-14 8101 471C71C7AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA79
-supervisor nodeAssignId META SERVER-15 8084 DC71C71C55555555555555555555555555555579
-supervisor nodeAssignId META SERVER-15 8089 497B425EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA80
-supervisor nodeAssignId META SERVER-15 8091 D097B426AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA80
-supervisor nodeAssignId META SERVER-15 8092 BB425ED0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA80
-supervisor nodeAssignId META SERVER-15 8093 B425ED09AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA80
-` // }}}
-
-function computeRange(data) { // {{{
-    var ringSizeLimit   = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
-        n = data.length,
-        keySizeA,
-        keySizeB,
-        keySize;
-
-    var x = -1; while(++x < n) {
-        if(x == 0) {
-            // First element, we need to calcul the range from the last element in the array
-            keySizeA = data[x].key;
-            keySizeB = ringSizeLimit - data[n-1].key;
-            keySize = keySizeA + keySizeB;
-        } else if(x == n) {
-            // Last element, same range as the first element
-            keySize = data[0].keysize
-        } else {
-            // need to compare with the previous element
-            keySize = data[x].key - data[x - 1].key;
-        }
-        percent = (keySize / ringSizeLimit)
-        data[x].keysize = keySize;
-        data[x].perc = percent;
-    }
-    return data;
-} // }}}
-function appendHostname(data) { // {{{
-    var n = data.length
-    var x = -1; while (++x < n) {
-        shortname = reduceName(data[x].server);
-        data[x].host = shortname;
-    }
-    return data;
-} // }}}
-
-// Convert raw ringsh output to valuable data {{{
-function convertRingsh(txt) {
-    var extracted = []
-    var lines = txt.split('\n');
-    var x = -1 ; while(++x < lines.length) {
-        var fields = lines[x].split(" ");
-        if(fields[0] == "supervisor") {
-            var mysrv = fields[2]+"-"+fields[3]+"-"+fields[4];
-            var mykey = parseInt("0x"+fields[5], 16);
-            extracted.push( {server: mysrv, key: mykey} )
-        }
-    }
-    return extracted;
-}/// }}}
-
-function formatInput(dataraw) { // {{{
-    data = convertRingsh(dataraw)
-    a = d3.select("pre")
-    str = JSON.stringify(data)
-    a.html(str);
-
-
-    // First: Need to sort by key
-    var ringkeysSorted = sortKeys(data);
-    
-    // Second: Calculate the range between each slices, and the percent usage, push it in the array
-    ringkeysSorted = computeRange(ringkeysSorted);
-    
-    // Third: guess the hostname and push it in the array
-    ringkeysSorted = appendHostname(ringkeysSorted);
-    
-    /*  Select one color per server + set the label for tooltips */ // {{{
-    var hostColor = {};
-    
-    ringkeysSorted.forEach(function(data) {
-        if(!(data.host in hostColor)) {
-            var sz = Object.keys(hostColor).length
-            hostColor[data.host] = colorsAvailable[sz];
-        }
-        key = hexPadded(data.key, 40);
-        data.colour = hostColor[data.host];
-        data.label = data.server + "<br/>" + key + "<br/>" + data.colour;
-    });
-    // }}}
-    
-    // accumulate the range of keys per server {{{
-    // use the hostColor dict to filter per host
-    var servstats = []
-    var servlist = Object.keys(hostColor);
-    
-    servlist.forEach(function(data) {
-        var a = ringkeysSorted.filter(({host}) => host == data);
-        var b = a.reduce((sum, value) => sum + value.keysize, 0);
-        var c = a.reduce((sum, value) => sum + value.perc, 0);
-        var d = hostColor[data];
-        servstats.push({hostname: data, keysizes: b, percs: c, color: d});
-    }); // }}}
-    
-    writeLegend(servstats);
-    return ringkeysSorted;
-}; // }}}
 
 // Handle input file {{{
 d3.select("input.datafile")
@@ -335,7 +158,9 @@ d3.select("input.datafile")
     }); // }}}
 
 // Default example data
-change(formatInput(ringKeyExample));
+d3.text("default-ringsh.txt", function(data) {
+    change(formatInput(data));
+});
 
 function change(data) { // {{{
 	/* ------- PIE SLICES -------*/
@@ -374,7 +199,8 @@ function change(data) { // {{{
 		.transition().duration(1000)
 		.attrTween("d", function(d) {
 			this._current = this._current || d;
-			var interpolate = d3.interpolate(this._current, d);
+            console.table(d)
+            var interpolate = d3.interpolate(this._current, d);
 			this._current = interpolate(0);
 			return function(t) {
 				return arc(interpolate(t));
