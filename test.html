@@ -163,6 +163,7 @@ d3.text("default-ringsh.txt", function(data) {
 });
 
 function change(data) { // {{{
+    console.table(data);
 	/* ------- PIE SLICES -------*/
 	var slice = RingImg.select(".slices").selectAll("path.slice")
         .data(pie(data), function(d){ return d.data.label; });
@@ -199,7 +200,6 @@ function change(data) { // {{{
 		.transition().duration(1000)
 		.attrTween("d", function(d) {
 			this._current = this._current || d;
-            console.table(d)
             var interpolate = d3.interpolate(this._current, d);
 			this._current = interpolate(0);
 			return function(t) {

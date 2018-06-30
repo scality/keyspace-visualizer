@@ -14,45 +14,38 @@ function getShortName(name) { // {{{
     var shortname = name.substring(aa + 1, ab)
 
     // replace dots and semicolons
-    shortname.replace(/\./g, '_');
-    shortname.replace(/:/g, "-");
+    shortname = shortname.replace(/\./g, '_');
+    shortname = shortname.replace(/:/g, "-");
 
     return shortname;
 } // }}}
 
 function computeRange(data) { // {{{
-    //hexa limit, 12 first chars, no need BigInt
-    var ringSizeLimit   = parseInt("0x" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF".substr(0,12)),
+    var ringSizeLimit = parseInt("0x" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"),
         n = data.length,
         keySizeA,
         keySizeB,
         keySize;
+
     var x = -1; while(++x < n) {
         if(x == 0) {
             // First element, we need to calcul the range from the last element in the array
-            keySizeA = data[x].key;
-            keySizeB = ringSizeLimit - data[n-1].key;
-            keySize = keySizeA + keySizeB;
+            var keySizeA = data[x].key;
+            var keySizeB = ringSizeLimit - data[n-1].key;
+            var keySize = keySizeA + keySizeB;
         } else if(x == n) {
             // Last element, same range as the first element
-            keySize = data[0].keysize
+            var keySize = data[0].keysize
         } else {
             // need to compare with the previous element
-            keySize = data[x].key - data[x - 1].key;
+            var keySize = data[x].key - data[x - 1].key;
         }
-        percent = (keySize / ringSizeLimit)
+        var percent = (keySize / ringSizeLimit)
         data[x].keysize = keySize;
         data[x].perc = percent;
     }
+    //console.table(data)
     return data;
-} // }}}
-
-/**
- * return a padded hexadecimal string {{{
- */
-function hexPadded(num, len) {
-    str = num.toString(16);
-    return "0".repeat(len - str.length) + str;
 } // }}}
 
 /**
@@ -66,6 +59,7 @@ function hexPadded(num, len) {
  */
 function formatInput(dataraw) {
     data = convertRingsh(dataraw)
+    console.table(data)
 
     /**
      * First: Need to sort by key

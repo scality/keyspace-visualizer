@@ -14,8 +14,8 @@ function convertRingsh(ringsh) {
             }
             // generate unique hostname
             var host = fields[2] +"-"+ fields[3] +"-"+ fields[4];
-            // hexa key, 12 first chars, no need BigInt
-            var key = parseInt("0x"+ fields[5].substr(0,12));
+
+            var key = parseInt("0x"+ fields[5]);
             data.push( {server: host, key: key, nativekey: fields[5]} )
         }
     }
