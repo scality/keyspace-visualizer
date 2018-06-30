@@ -163,7 +163,7 @@ d3.text("default-ringsh.txt", function(data) {
 });
 
 function change(data) { // {{{
-    console.table(data);
+    //console.table(data);
 	/* ------- PIE SLICES -------*/
 	var slice = RingImg.select(".slices").selectAll("path.slice")
         .data(pie(data), function(d){ return d.data.label; });
@@ -180,7 +180,7 @@ function change(data) { // {{{
             .ease('elastic')
             .style('opacity', 1)
             .attr('transform', function (d) {
-                var dist = 50;
+                var dist = 30;
                 d.midAngle = ((d.endAngle - d.startAngle) / 2) + d.startAngle;
                 var x = Math.sin(d.midAngle) * dist;
                 var y = -Math.cos(d.midAngle) * dist;
