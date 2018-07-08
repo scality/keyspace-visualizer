@@ -9,7 +9,7 @@
 <body>
     <div class="radios">
         <div class="radio-group">
-            <input type="radio" id="zoom1x" name="zoom-group"><label for="zoom1x">Zoom 1x</label>
+            <input type="radio" id="zoom1x" name="zoom-group" checked="checked"><label for="zoom1x">Zoom 1x</label>
             <input type="radio" id="zoom2x" name="zoom-group"><label for="zoom2x">Zoom 2x</label>
             <input type="radio" id="zoom3x" name="zoom-group"><label for="zoom3x">Zoom 3x</label>
         </div>
@@ -183,8 +183,8 @@ d3.selectAll('input[name="radio-group"]')
 
 d3.selectAll('input[name="zoom-group"]')
     .on("change", function() {
-        var defw = 400,
-            defh = 400;
+        var defw = 600,
+            defh = 600;
         if(this.id == "zoom1x") { svg.attr("width", defw).attr("height", defh) }
         if(this.id == "zoom2x") { svg.attr("width", defw * 2).attr("height", defh * 2) }
         if(this.id == "zoom3x") { svg.attr("width", defw * 3).attr("height", defh * 3) }
