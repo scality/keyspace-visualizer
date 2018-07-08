@@ -137,12 +137,10 @@ function change(data) {
     anchor
         .on('mousedown', function(d, i) {
             var timedOut = 0
-            d3.select("svg")
-                .on('mousemove', function(elem, i) {
-
+            svg.on('mousemove', function(elem, i) {
                     if(!timedOut) {
-                        var x = (width/4) - d3.mouse(this)[0];
-                        var y = (height/2) - d3.mouse(this)[1];
+                        var x = originx - d3.mouse(this)[0];
+                        var y = originy - d3.mouse(this)[1];
                         var radian = Math.atan2(y, x); // In radians
                         var degree = radian * (180 / Math.PI) + 180; 
                         //console.log("x:"+x+" y:"+y+" rad:"+rad+" deg:"+deg)
@@ -155,8 +153,7 @@ function change(data) {
                     setTimeout(function() { timedOut = 0 }, 10)
                 })
         .on('mouseup', function(e) {
-            d3.select("svg")
-                 .on('mousemove', null);
+            svg.on('mousemove', null);
         })
     });
 
