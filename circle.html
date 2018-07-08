@@ -145,7 +145,7 @@ function change(data) {
         .attr("cx", function(d) { return cosDegree(d.angle) * radline; })
         .attr("cy", function(d) { return sinDegree(d.angle) * radline; })
         .attr("r", 5)
-        .style("fill", "blue")
+        .style("fill", function(d, i) { if(i == 0) { return "green" } else { return "blue" }; })
         .style("stroke", "black")
         .style("stroke-width", "1px")
 
@@ -159,22 +159,22 @@ function change(data) {
                         var x = (width/4) - d3.mouse(this)[0];
                         var y = (height/2) - d3.mouse(this)[1];
                         var rad = Math.atan2(y, x); // In radians
-                        var deg = rad * (180 / Math.PI)
+                        var deg = rad * (180 / Math.PI) + 180
                         //console.log("x:"+x+" y:"+y+" rad:"+rad+" deg:"+deg)
                         visu.selectAll("g.arrows, g.lines")
                             .attr("transform", "translate(" + width / 4 + "," + height / 2 + ") rotate("+deg+", 0, 0)");
                     }
-                    
+
                     timedOut = 1
                     // add 10ms latency to not overlad the cpu
                     setTimeout(function() { timedOut = 0 }, 10)
                 })
+                // Detect mouseup on the whole svg
+         .on('mouseup', function(e) {
+            d3.select("svg")
+                 .on('mousemove', null);
         })
-
-    // Detect mouseup on the whole svg
-    d3.select("svg").on('mouseup', function(e) {
-            e.stopPropagation();
-        });
+    });
 
     
     anchor.exit()
