@@ -5,11 +5,29 @@
         background-color: gray;
     }
 </style>
-<script src="d3.v3.js"></script>
+<script src="js/d3.v3.js"></script>
 <body>
+    <div class="labelType" style="position:absolute; margin-top: 30px">
+        <input type="radio" name="labelType" value="cos0">Cos0<br>
+        <input type="radio" name="labelType" value="cos1">Cos1<br>
+        <input type="radio" name="labelType" value="cos2" checked="checked">Cos2<br>
+        <input type="radio" name="labelType" value="cos3">Cos3<br>
+        <input type="radio" name="labelType" value="cos4">Cos4<br>
+        <input type="radio" name="labelType" value="cos5">Cos5<br>
+    </div>
     <svg width="1000" height="500"></svg>
 
 <script>
+// List of predefined angles
+var coses = {
+    "cos0": { "schema": 6, "part": [0] },
+    "cos1": { "schema": 6, "part": [0, 3] },
+    "cos2": { "schema": 6, "part": [0, 2, 4] },
+    "cos3": { "schema": 6, "part": [0, 3, 2, 5] },
+    "cos4": { "schema": 6, "part": [0, 3, 2, 5, 1] },
+    "cos5": { "schema": 6, "part": [0, 3, 2, 5, 1, 4] }
+};
+
 var width = 1000,
     height = 500,
     radius = Math.min(width, height) * 0.5;
@@ -20,11 +38,15 @@ visu
     .attr("class", "visu")
 visu
     .append("g")
+    .attr("class", "lines")
+visu
+    .append("g")
     .attr("class", "arrows")
 
 // Starting draw point in the svg
+// rotate -90° to start at noon
 visu.selectAll("g")
-    .attr("transform", "translate(" + width / 4 + "," + height / 2 + ")");
+    .attr("transform", "translate(" + width / 4 + "," + height / 2 + ") rotate(-90, 0, 0)");
 
 // Draw circle
 visu.select("g.visu")
@@ -37,12 +59,6 @@ visu.select("g.visu")
     .style("stroke", "blue")
     .style("stroke-width", "5px")
 
-mydatas = [
-    { "angle": 0, "replica": 0},
-    { "angle": 120, "replica": 1 },
-    { "angle": 240, "replica": 2 }
-]
-
 function cosDegree(degrees) {
     return Math.cos( degrees * Math.PI / 180);
 }
@@ -50,27 +66,119 @@ function sinDegree(degrees) {
     return Math.sin( degrees * Math.PI / 180);
 }
 
-change(mydatas);
+/**
+ * Takes schema and slice numbers
+ * Return array of angles
+ */
+function partsToAngles(data) {
+    angles = [],
+    x = -1;
+    while(++x < data.schema) {
+        var n = data.part.length,
+            y = -1;
+        while(++y < n) {
+            if( x == data.part[y] ) {
+                angles.push( { "angle": (360 / data.schema * x) } );
+                break;
+            }
+        }
+    }
+    return angles;
+};
+
+// default view at init
+change( partsToAngles(coses.cos2) );
+// hanle other views
+d3.selectAll('input[name="labelType"]')
+    .on("change", function() {
+        labelType = this.value
+        var angles = partsToAngles(coses[labelType]);
+        change(angles);
+    });
+
+// Display the angles
 function change(data) {
-    var arrow = visu.select(".arrows").selectAll("g.dline")
-        .data(data, function(d) {return d.angle; });
+    var radline = radius * 0.9
 
+    var lines = visu.select(".lines")
+        .selectAll("line")
+        .data(data, function(d) { return d.angle; });
 
-    arrow.enter()
-        .insert("g")
+    /*
+    lines.enter()
+        .append("g")
+        .attr("class", "angleSweep")
+        .append("polyline")
+        .attr("points", function(d) {
+            var paira = "0, 0";
+            var pairb = cosDegree(d.angle) * radline +","+sinDegree(d.angle) * radline;
+            var pairc = "2, 2; 
+            return paira + " " + pairb + " " + pairc;
+        })
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-width", "2px")
+    */
+    lines.enter()
+        .append("g")
         .attr("class", "angleSweep")
         .append("line")
         .attr("x1", 0)
         .attr("y1", 0)
-        .attr("x2", function(d) { return cosDegree(d.angle) * radius; })
-        .attr("y2", function(d) { return sinDegree(d.angle) * radius; })
+        .attr("x2", function(d) { return cosDegree(d.angle) * radline; })
+        .attr("y2", function(d) { return sinDegree(d.angle) * radline; })
         .style("fill", "none")
         .style("stroke", "black")
         .style("stroke-width", "2px")
-
-    arrow.exit()
+    
+    lines.exit()
         .remove();
 
+    var anchor = visu.select(".arrows")
+        .selectAll("circle")
+        .data(data, function(d) { return d.angle; });
+
+    anchor.enter()
+        .append("g")
+        .attr("class", "anchor")
+        .append("circle")
+        .attr("cx", function(d) { return cosDegree(d.angle) * radline; })
+        .attr("cy", function(d) { return sinDegree(d.angle) * radline; })
+        .attr("r", 5)
+        .style("fill", "blue")
+        .style("stroke", "black")
+        .style("stroke-width", "1px")
+
+    anchor
+        .on('mousedown', function(d, i) {
+            var timedOut = 0
+            d3.select("svg")
+                .on('mousemove', function(elem, i) {
+
+                    if(!timedOut) {
+                        var x = (width/4) - d3.mouse(this)[0];
+                        var y = (height/2) - d3.mouse(this)[1];
+                        var rad = Math.atan2(y, x); // In radians
+                        var deg = rad * (180 / Math.PI)
+                        //console.log("x:"+x+" y:"+y+" rad:"+rad+" deg:"+deg)
+                        visu.selectAll("g.arrows, g.lines")
+                            .attr("transform", "translate(" + width / 4 + "," + height / 2 + ") rotate("+deg+", 0, 0)");
+                    }
+                    
+                    timedOut = 1
+                    // add 10ms latency to not overlad the cpu
+                    setTimeout(function() { timedOut = 0 }, 10)
+                })
+        })
+
+    // Detect mouseup on the whole svg
+    d3.select("svg").on('mouseup', function(e) {
+            e.stopPropagation();
+        });
+
+    
+    anchor.exit()
+        .remove();
 }
 </script> 
 
