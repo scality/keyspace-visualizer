@@ -7,32 +7,55 @@
 <!-- }}} -->
 
 <body>
-    <div class="radio-group">
-        <input type="radio" id="rcos0" name="radio-group"><label for="rcos0">Cos0</label>
-        <input type="radio" id="rcos1" name="radio-group"><label for="rcos1">Cos1</label>
-        <input type="radio" id="rcos2" name="radio-group" checked="checked"><label for="rcos2">Cos2</label>
-        <input type="radio" id="rcos3" name="radio-group"><label for="rcos3">Cos3</label>
-        <input type="radio" id="rcos4" name="radio-group"><label for="rcos4">Cos4</label>
-        <input type="radio" id="rcos5" name="radio-group"><label for="rcos5">Cos5</label>
-        <input type="radio" id="rarc12" name="radio-group"><label for="rarc12">Schema12</label>
-        <input type="radio" id="rarc18" name="radio-group"><label for="rarc18">Schema18</label>
+    <div class="radios">
+        <div class="radio-group">
+            <input type="radio" id="zoom1x" name="zoom-group"><label for="zoom1x">Zoom 1x</label>
+            <input type="radio" id="zoom2x" name="zoom-group"><label for="zoom2x">Zoom 2x</label>
+            <input type="radio" id="zoom3x" name="zoom-group"><label for="zoom3x">Zoom 3x</label>
+        </div>
+
+        <div class="radio-group">
+            <input type="radio" id="rcos0" name="radio-group"><label for="rcos0">Cos0</label>
+            <input type="radio" id="rcos1" name="radio-group"><label for="rcos1">Cos1</label>
+            <input type="radio" id="rcos2" name="radio-group" checked="checked"><label for="rcos2">Cos2</label>
+            <input type="radio" id="rcos3" name="radio-group"><label for="rcos3">Cos3</label>
+            <input type="radio" id="rcos4" name="radio-group"><label for="rcos4">Cos4</label>
+            <input type="radio" id="rcos5" name="radio-group"><label for="rcos5">Cos5</label>
+            <input type="radio" id="rarc12" name="radio-group"><label for="rarc12">Schema12</label>
+            <input type="radio" id="rarc18" name="radio-group"><label for="rarc18">Schema18</label>
+        </div>
+
+        <div class="input-group">
+            <input id="file-upload" class="datafile" type="file"/>
+            <label for="file-upload" class="custom-file-upload">
+                Upload a ringh.txt file
+            </label>
+        </div>
     </div>
 
-    <div class="input-group">
-        <input id="file-upload" class="datafile" type="file"/>
-        <label for="file-upload" class="custom-file-upload">
-            Upload a ringh.txt file
-        </label>
+    <div class="info">Upload a ringsh.txt file to vizualize your keyspace.</div>
+
+    <div id="wrapper">
+        <div class="svg">
+            <svg width="600" height="600"></svg>
+        </div>
+
+        <div id="infos"></div>
     </div>
 
-    <div class="svg">
-        <svg width="1000" height="800"></svg>
+    <div class="warning">TODO
+        <ul>
+            <li>Change anchors circle color according to the current slice.</li>
+            <li>Remove a slice when clicking on it, and rearrange the pie.</li>
+        </ul>
     </div>
-    <div class="legend"></div>
+    <div class="success">Color scheme updated.</div>
+
     <div class="tooltip"></div>
-
 <script>
 /* ------- Global variables to use {{{-------*/
+var dataPie; // Store the datas for the pie chart, to update during zoom
+var dataAngles; // Store de datas for the line angles, to update during zoom
 var svg = d3.select("svg"),
     width = svg.attr("width"),
     height = svg.attr("height"),
@@ -40,11 +63,16 @@ var svg = d3.select("svg"),
     originx = width / 2,
     originy = height / 2;
 
+/* Lines length used ot visualize angles */
+var lineStart = radius * 0.3;
+var lineLength = radius * 0.9;
+
 /**
  *  Palet of colors to use
  * SchemeSets appear in d3.v4.js
  * var colorsAvailable = d3.schemeSet1.concat(d3.schemeSet2).concat(d3.schemeSet3);
  */
+/*
 var colorsAvailable = [
     "#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00",
     "#a65628","#f781bf","#999999","#66c2a5","#fc8d62",
@@ -52,6 +80,14 @@ var colorsAvailable = [
     "#b3b3b3","#8dd3c7","#ffffb3","#bebada","#fb8072",
     "#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9",
     "#bc80bd","#ccebc5","#ffed6f"
+]
+*/
+var colorsAvailable = [
+    "#e6194b", "#3cb44b", "#ffe119", "#0082c8", "#f58231",
+    "#911eb4", "#46f0f0", "#f032e6", "#d2f53c", "#fabebe",
+    "#008080", "#e6beff", "#aa6e28", "#fffac8", "#800000",
+    "#aaffc3", "#808000", "#ffd8b1", "#000080", "#808080",
+    "#FFFFFF", "#000000"
 ]
 
 /* List of predefined angles */
@@ -79,22 +115,23 @@ RingImg.append("g").attr("class", "labels");
 svg.append("g").attr("class", "lines");
 /* Arrows at the end of the lines */
 svg.append("g").attr("class", "arrows");
+/* Small center circle */
+var smcircle = svg.append("g").attr("class", "smcircle").append("circle");
+smcircle
+    .attr("r", lineStart)
+    .attr("stroke", "white")
+    .attr("stroke-width", 4)
+    .attr("fill", "none")
 
 /**
  *  Starting draw point in the svg
  *  Rotate -90° to start at noon
  */
-svg.selectAll("g.pie, g.lines, g.arrows")
+svg.selectAll("g.pie, g.lines, g.arrows, g.smcircle")
     .attr("transform", "translate(" + originx + "," + originy + ") rotate(-90, 0, 0)");
 
 // Hidden div to handle texts
 var tooltip = d3.select("div.tooltip");
-
-// The colored legend
-var legendwidth = (width - 5) * 0.5 + "px";
-var legend = d3.select("div.legend")
-    .style("width", legendwidth)
-    .style("max-width", legendwidth);
 
 /* ------- END: DOM Selection }}}-------*/
 /* ------- Standard configurations and function definitions {{{-------*/
@@ -105,8 +142,8 @@ var pie = d3.layout.pie()
 var arc = d3.svg.arc()          // slices configuration
     .cornerRadius(5)            // rounding the slices
     .padAngle(0)                // space between slices
-	.outerRadius(radius * 0.8)  // size limit
-	.innerRadius(radius * 0.4); // starting draw
+	.outerRadius(function() { return radius * 0.8; } )  // size limit
+	.innerRadius(function() { return radius * 0.4; } ); // starting draw
 
 /* ------- END: Standard function definitions and configurations }}}-------*/
 
@@ -121,7 +158,8 @@ d3.select("input.datafile")
         reader.onloadend = function(evt) {
             var dataURL = evt.target.result;
             d3.text(dataURL, function(d) {
-                change(formatInput(d));
+                dataPie = formatInput(d);
+                change(dataPie);
             });
         };
         reader.readAsDataURL(file);
@@ -129,16 +167,42 @@ d3.select("input.datafile")
 
 // Data example
 d3.text("default-ringsh.txt", function(data) {
-    change(formatInput(data));
+    dataPie = formatInput(data);
+    change(dataPie);
 });
 
 // default lines view at init
-updateAngles( partsToAngles(coses.rcos2) );
+dataAngles = partsToAngles(coses.rcos2);
+updateAngles( dataAngles );
 d3.selectAll('input[name="radio-group"]')
     .on("change", function() {
         labelType = this.id
-        var angles = partsToAngles(coses[labelType]);
-        updateAngles(angles);
+        dataAngles = partsToAngles(coses[labelType]);
+        updateAngles(dataAngles);
+    });
+
+d3.selectAll('input[name="zoom-group"]')
+    .on("change", function() {
+        var defw = 400,
+            defh = 400;
+        if(this.id == "zoom1x") { svg.attr("width", defw).attr("height", defh) }
+        if(this.id == "zoom2x") { svg.attr("width", defw * 2).attr("height", defh * 2) }
+        if(this.id == "zoom3x") { svg.attr("width", defw * 3).attr("height", defh * 3) }
+
+        width = svg.attr("width"),
+        height = svg.attr("height"),
+        radius = Math.min(width, height) * 0.5,
+        originx = width / 2,
+        originy = height / 2;
+        lineStart = radius * 0.3;
+        lineLength = radius * 0.9;
+        svg.selectAll("g.pie, g.lines, g.arrows, g.smcircle")
+            .attr("transform", "translate(" + originx + "," + originy + ") rotate(-90, 0, 0)");
+        smcircle
+            .attr("r", lineStart)
+        change(dataPie);
+        updateAngles([]); // hack to resize the angles
+        updateAngles(dataAngles);
     });
 
 function change(data) { // {{{
@@ -219,24 +283,21 @@ function change(data) { // {{{
 }; // }}}
 
 function updateAngles(data) {
-    var radline = radius * 0.9
-
     var lines = svg.select("g.lines")
         .selectAll("line")
         .data(data, function(d) { return d.angle; });
 
     lines.enter()
         .append("line")
-        .attr("x1", 0)
-        .attr("y1", 0)
-        .attr("x2", function(d) { return cosDegree(d.angle) * radline; })
-        .attr("y2", function(d) { return sinDegree(d.angle) * radline; })
+        .attr("x1", function(d) { return cosDegree(d.angle) * lineStart; })
+        .attr("y1", function(d) { return sinDegree(d.angle) * lineStart; })
+        .attr("x2", function(d) { return cosDegree(d.angle) * lineLength; })
+        .attr("y2", function(d) { return sinDegree(d.angle) * lineLength; })
         .style("fill", "none")
         .style("stroke", "white")
         .style("stroke-width", "2px")
     
-    lines.exit()
-        .remove();
+    lines.exit().remove();
 
     var anchor = svg.select("g.arrows")
         .selectAll("circle")
@@ -244,22 +305,19 @@ function updateAngles(data) {
 
     anchor.enter()
         .append("circle")
-        .attr("cx", function(d) { return cosDegree(d.angle) * radline; })
-        .attr("cy", function(d) { return sinDegree(d.angle) * radline; })
+        .attr("cx", function(d) { return cosDegree(d.angle) * lineLength; })
+        .attr("cy", function(d) { return sinDegree(d.angle) * lineLength; })
         .attr("r", 10)
-        .style("fill", function(d, i) { if(i == 0) { return "green" } else { return "blue" }; })
-        .style("stroke", "black")
-        .style("stroke-width", "1px")
+        .attr("class", "circle")
+        .attr("style", function(d, i) { if(i == 0) { return "fill: green;" } })
 
     anchor
         .on('mousedown', function(d, i) {
             var timedOut = 0
-            d3.select("svg")
-                .on('mousemove', function(elem, i) {
-
+            svg.on('mousemove', function(elem, i) {
                     if(!timedOut) {
-                        var x = (width/4) - d3.mouse(this)[0];
-                        var y = (height/2) - d3.mouse(this)[1];
+                        var x = originx - d3.mouse(this)[0];
+                        var y = originy - d3.mouse(this)[1];
                         var radian = Math.atan2(y, x); // In radians
                         var degree = radian * (180 / Math.PI) + 180; 
                         //console.log("x:"+x+" y:"+y+" rad:"+rad+" deg:"+deg)
@@ -272,13 +330,11 @@ function updateAngles(data) {
                     setTimeout(function() { timedOut = 0 }, 10)
                 })
         .on('mouseup', function(e) {
-            d3.select("svg")
-                 .on('mousemove', null);
+            svg.on('mousemove', null);
         })
     });
 
-    anchor.exit()
-        .remove();
+    anchor.exit().remove();
 };
 
 </script>

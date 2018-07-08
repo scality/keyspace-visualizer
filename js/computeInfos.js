@@ -108,48 +108,59 @@ function formatInput(dataraw) {
     }); // }}}
     
     // Need to move writeLegend to a better place
-    writeLegend(servstats);
     writeLegend2(ringkeysSorted, servstats)
     return ringkeysSorted;
 }; // }}}
 
-function writeLegend2(data, stats) {
-    var table = d3.select("div#infos").append("table");
-    var titles = ["Host", "Members"];
-
-    var headers = table.append('thead').append('tr')
-        .selectAll('th')
-        .data(titles).enter()
-        .append('th')
-        .text(function (d) { return d; })
-
-    var rows = table.append('tbody').selectAll('tr')
-        .data(stats).enter()
-        .append('tr');
-
-    rows
-        .selectAll('td')
-        .data(function (d) {
-            return titles.map(function (k) {
-                return { 'value': d.hostname, 'name': k };
-            })
-        }).enter()
-        .append("td")
-        .attr('data-th', function (d) {
-            return d.name;
-        })
-        .html(function(d) {
-            if(d.name == "Host") {
-                return d.value;
-            } 
-            if(d.name == "Members") {
-                var content = data.forEach(function(s) {
-                    if(d.value == s.host) {
-                        console.log(s.server)
-                        return '<span>'+ s.server + '</span>'
-                    }
-                })
-                return content;
-            }
+function writeLegend2(data, rawstats) {
+    var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+    function sortHost(obj) {
+        return obj.sort(function(a, b) {
+            return collator.compare(a.hostname, b.hostname);
         });
+    }
+    stats = sortHost(rawstats)
+
+
+    var divinfo = d3.select("div#infos").html("");
+    var table = divinfo.append("table");
+
+    var headers = table
+        .attr("class", "minimalistBlack")
+        .append('thead')
+        .append("tr")
+        .style("border-left", "4px solid black")
+    headers.append("th").text("Host");
+    headers.append("th").text("Perc. Total");
+    headers.append("th").attr("id", "members").text("Nodes");
+
+
+    var colnumbers = 1;
+    var rows = table.append('tbody');
+    stats.forEach(function(d) {
+        var myrow = rows
+            .append("tr")
+            .style("border-left", "4px solid " + d.color)
+
+        myrow
+            .append("td")
+            .style("border-top", "4px solid " + d.color)
+            .text(d.hostname)
+
+        myrow
+            .append("td").text(d3.format(".2%")(d.percs))
+            .style("border-top", "4px solid " + d.color)
+
+        var cntemp = 0;
+        data.forEach(function(e) {
+            if(e.host == d.hostname) {
+                if(++cntemp > colnumbers) { ++colnumbers; }
+                myrow.append("td")
+                    .style("border-top", "4px solid " + d.color)
+                    .text(d3.format(".2%")(e.perc))
+            }
+        })
+
+    })
+    d3.select("th#members").attr("colspan", colnumbers);
 }

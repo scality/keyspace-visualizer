@@ -38,7 +38,7 @@ function writeLegend(data) { // {{{
         .append("span")
         .attr("class", "ringspace")
         .text(function(d) { 
-            return " | Ring space: " + d.percs; // d3.format(".2%")(d.percs);
+            return " | Ring space: " + d3.format(".3%")(d.percs);
         });
 
     text.exit()
@@ -66,7 +66,7 @@ function partsToAngles(data) {
         var y = -1;
         while(++y < n) {
             if( x == data.part[y] ) {
-                angles.push( { "angle": (360 / data.schema * x) } );
+                angles.push( { "angle": (360 / data.schema * x), "radius": radius } );
                 break;
             }
         }
