@@ -14,8 +14,10 @@
         <input type="radio" name="labelType" value="cos3">Cos3<br>
         <input type="radio" name="labelType" value="cos4">Cos4<br>
         <input type="radio" name="labelType" value="cos5">Cos5<br>
+        <input type="radio" name="labelType" value="arc12">Schema 12<br>
+        <input type="radio" name="labelType" value="arc18">Schema 18<br>
     </div>
-    <svg width="1000" height="500"></svg>
+    <svg width="800" height="800"></svg>
 
 <script>
 // List of predefined angles
@@ -25,12 +27,16 @@ var coses = {
     "cos2": { "schema": 6, "part": [0, 2, 4] },
     "cos3": { "schema": 6, "part": [0, 3, 2, 5] },
     "cos4": { "schema": 6, "part": [0, 3, 2, 5, 1] },
-    "cos5": { "schema": 6, "part": [0, 3, 2, 5, 1, 4] }
+    "cos5": { "schema": 6, "part": [0, 3, 2, 5, 1, 4] },
+    "arc12": { "schema": 12, "part": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
+    "arc18": { "schema": 18, "part": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17] }
 };
 
-var width = 1000,
-    height = 500,
-    radius = Math.min(width, height) * 0.5;
+var width = 800,
+    height = 800,
+    radius = Math.min(width, height) * 0.5,
+    originx = width / 2,
+    originy = height / 2;
 
 var visu = d3.select("svg")
 visu
@@ -46,7 +52,7 @@ visu
 // Starting draw point in the svg
 // rotate -90° to start at noon
 visu.selectAll("g")
-    .attr("transform", "translate(" + width / 4 + "," + height / 2 + ") rotate(-90, 0, 0)");
+    .attr("transform", "translate(" + originx + "," + originy + ") rotate(-90, 0, 0)");
 
 // Draw circle
 visu.select("g.visu")
@@ -71,11 +77,12 @@ function sinDegree(degrees) {
  * Return array of angles
  */
 function partsToAngles(data) {
-    angles = [],
-    x = -1;
+    var angles = [],
+        x = -1,
+        n = data.part.length;
     while(++x < data.schema) {
-        var n = data.part.length,
-            y = -1;
+        // Populate angle only with the desired angles
+        var y = -1;
         while(++y < n) {
             if( x == data.part[y] ) {
                 angles.push( { "angle": (360 / data.schema * x) } );
@@ -104,21 +111,6 @@ function change(data) {
         .selectAll("line")
         .data(data, function(d) { return d.angle; });
 
-    /*
-    lines.enter()
-        .append("g")
-        .attr("class", "angleSweep")
-        .append("polyline")
-        .attr("points", function(d) {
-            var paira = "0, 0";
-            var pairb = cosDegree(d.angle) * radline +","+sinDegree(d.angle) * radline;
-            var pairc = "2, 2; 
-            return paira + " " + pairb + " " + pairc;
-        })
-        .style("fill", "none")
-        .style("stroke", "black")
-        .style("stroke-width", "2px")
-    */
     lines.enter()
         .append("g")
         .attr("class", "angleSweep")
@@ -158,25 +150,23 @@ function change(data) {
                     if(!timedOut) {
                         var x = (width/4) - d3.mouse(this)[0];
                         var y = (height/2) - d3.mouse(this)[1];
-                        var rad = Math.atan2(y, x); // In radians
-                        var deg = rad * (180 / Math.PI) + 180
+                        var radian = Math.atan2(y, x); // In radians
+                        var degree = radian * (180 / Math.PI) + 180; 
                         //console.log("x:"+x+" y:"+y+" rad:"+rad+" deg:"+deg)
                         visu.selectAll("g.arrows, g.lines")
-                            .attr("transform", "translate(" + width / 4 + "," + height / 2 + ") rotate("+deg+", 0, 0)");
+                            .attr("transform", "translate("+ originx +","+ originy +") rotate("+ degree +", 0, 0)");
                     }
 
                     timedOut = 1
                     // add 10ms latency to not overlad the cpu
                     setTimeout(function() { timedOut = 0 }, 10)
                 })
-                // Detect mouseup on the whole svg
-         .on('mouseup', function(e) {
+        .on('mouseup', function(e) {
             d3.select("svg")
                  .on('mousemove', null);
         })
     });
 
-    
     anchor.exit()
         .remove();
 }
