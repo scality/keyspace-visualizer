@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/d3.v3.js"></script>
+<script src="js/formatInput.js"></script>
+<script src="js/computeInfos.js"></script>
+<!-- }}} -->
+
+<body>
+    <div class="radio-group">
+        <input type="radio" id="rcos0" name="radio-group"><label for="rcos0">Cos0</label>
+        <input type="radio" id="rcos1" name="radio-group"><label for="rcos1">Cos1</label>
+        <input type="radio" id="rcos2" name="radio-group" checked="checked"><label for="rcos2">Cos2</label>
+        <input type="radio" id="rcos3" name="radio-group"><label for="rcos3">Cos3</label>
+        <input type="radio" id="rcos4" name="radio-group"><label for="rcos4">Cos4</label>
+        <input type="radio" id="rcos5" name="radio-group"><label for="rcos5">Cos5</label>
+        <input type="radio" id="rarc12" name="radio-group"><label for="rarc12">Schema12</label>
+        <input type="radio" id="rarc18" name="radio-group"><label for="rarc18">Schema18</label>
+    </div>
+
+    <div class="input-group">
+        <input id="file-upload" class="datafile" type="file"/>
+        <label for="file-upload" class="custom-file-upload">
+            Upload a ringh.txt file
+        </label>
+    </div>
+
+    <div class="svg">
+        <svg width="1000" height="800"></svg>
+    </div>
+    <div class="legend"></div>
+    <div class="tooltip"></div>
+
+<script>
+/* ------- Global variables to use {{{-------*/
+var svg = d3.select("svg"),
+    width = svg.attr("width"),
+    height = svg.attr("height"),
+	radius = Math.min(width, height) * 0.5,
+    originx = width / 2,
+    originy = height / 2;
+
+/**
+ *  Palet of colors to use
+ * SchemeSets appear in d3.v4.js
+ * var colorsAvailable = d3.schemeSet1.concat(d3.schemeSet2).concat(d3.schemeSet3);
+ */
+var colorsAvailable = [
+    "#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00",
+    "#a65628","#f781bf","#999999","#66c2a5","#fc8d62",
+    "#8da0cb","#e78ac3","#a6d854","#ffd92f","#e5c494",
+    "#b3b3b3","#8dd3c7","#ffffb3","#bebada","#fb8072",
+    "#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9",
+    "#bc80bd","#ccebc5","#ffed6f"
+]
+
+/* List of predefined angles */
+var coses = {
+    "rcos0": { "schema": 6, "part": [0] },
+    "rcos1": { "schema": 6, "part": [0, 3] },
+    "rcos2": { "schema": 6, "part": [0, 2, 4] },
+    "rcos3": { "schema": 6, "part": [0, 3, 2, 5] },
+    "rcos4": { "schema": 6, "part": [0, 3, 2, 5, 1] },
+    "rcos5": { "schema": 6, "part": [0, 3, 2, 5, 1, 4] },
+    "rarc12": { "schema": 12, "part": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
+    "rarc18": { "schema": 18, "part": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17] }
+};
+
+/* ------- END: Global variables to use }}}-------*/
+/* ------- DOM Selection {{{-------*/
+// Group to handle key space slices pie chart
+var RingImg = svg.append("g").attr("class", "pie");
+
+/* Sclices */
+RingImg.append("g").attr("class", "slices");
+/* Tooltip texts */
+RingImg.append("g").attr("class", "labels");
+/* Lines */
+svg.append("g").attr("class", "lines");
+/* Arrows at the end of the lines */
+svg.append("g").attr("class", "arrows");
+
+/**
+ *  Starting draw point in the svg
+ *  Rotate -90° to start at noon
+ */
+svg.selectAll("g.pie, g.lines, g.arrows")
+    .attr("transform", "translate(" + originx + "," + originy + ") rotate(-90, 0, 0)");
+
+// Hidden div to handle texts
+var tooltip = d3.select("div.tooltip");
+
+// The colored legend
+var legendwidth = (width - 5) * 0.5 + "px";
+var legend = d3.select("div.legend")
+    .style("width", legendwidth)
+    .style("max-width", legendwidth);
+
+/* ------- END: DOM Selection }}}-------*/
+/* ------- Standard configurations and function definitions {{{-------*/
+var pie = d3.layout.pie()
+	.sort(null)
+	.value(function(d) { return parseInt(d.keysize) });
+
+var arc = d3.svg.arc()          // slices configuration
+    .cornerRadius(5)            // rounding the slices
+    .padAngle(0)                // space between slices
+	.outerRadius(radius * 0.8)  // size limit
+	.innerRadius(radius * 0.4); // starting draw
+
+/* ------- END: Standard function definitions and configurations }}}-------*/
+
+/* ------- Reformating the input -------*/
+
+// Handle input file {{{
+d3.select("input.datafile")
+    .on("change", function(d) {
+        var file = d3.event.target.files[0];
+        var reader = new FileReader();
+
+        reader.onloadend = function(evt) {
+            var dataURL = evt.target.result;
+            d3.text(dataURL, function(d) {
+                change(formatInput(d));
+            });
+        };
+        reader.readAsDataURL(file);
+    }); // }}}
+
+// Data example
+d3.text("default-ringsh.txt", function(data) {
+    change(formatInput(data));
+});
+
+// default lines view at init
+updateAngles( partsToAngles(coses.rcos2) );
+d3.selectAll('input[name="radio-group"]')
+    .on("change", function() {
+        labelType = this.id
+        var angles = partsToAngles(coses[labelType]);
+        updateAngles(angles);
+    });
+
+function change(data) { // {{{
+    //console.table(data);
+	/* ------- PIE SLICES -------*/
+	var slice = RingImg.select(".slices").selectAll("path.slice")
+        .data(pie(data), function(d){ return d.data.label; });
+
+	slice.enter()
+		.insert("path")
+		.style("fill", function(d) { return d.data.colour; })
+        .attr("class", function(d) { return "slice myshrtsrv" + d.data.host; })
+        .style('opacity', 0.8)
+        .on('mouseover', function (d, i) {
+	        RingImg.select(".slices").selectAll("path.slice.myshrtsrv" + d.data.host)
+            .transition()
+            .duration(500)
+            .ease('elastic')
+            .style('opacity', 1)
+            .attr('transform', function (d) {
+                var dist = 30;
+                d.midAngle = ((d.endAngle - d.startAngle) / 2) + d.startAngle;
+                var x = Math.sin(d.midAngle) * dist;
+                var y = -Math.cos(d.midAngle) * dist;
+                return 'translate(' + x + ',' + y + ')';
+            });
+        })
+        .on('mouseleave', function (d, i) {
+	        RingImg.select(".slices").selectAll("path.slice.myshrtsrv" + d.data.host)
+            .transition()
+            .duration(500)
+            .ease('bounce')
+            .style('opacity', 0.8)
+            .attr('transform', 'translate(0,0)')
+        });
+
+    slice
+		.transition().duration(1000)
+		.attrTween("d", function(d) {
+			this._current = this._current || d;
+            var interpolate = d3.interpolate(this._current, d);
+			this._current = interpolate(0);
+			return function(t) {
+				return arc(interpolate(t));
+			};
+        });
+
+	slice.exit()
+		.remove();
+
+	/* ------- TOOLTIPS -------*/
+	var text = RingImg.select(".labels").selectAll("text")
+        .data(pie(data), function(d){ return d.data.label; });
+
+    function midAngle(d){
+        return d.startAngle + (d.endAngle - d.startAngle)/2;
+    }
+
+	var tooltipaction = RingImg.select(".slices").selectAll("path.slice")
+        .data(pie(data), function(d){ return d.data.label; });
+
+    tooltipaction
+        .on("mousemove", function(d){
+            tooltip.style("left", d3.event.pageX+10+"px");
+            tooltip.style("top", d3.event.pageY-25+"px");
+            tooltip.style("display", "inline-block");
+            tooltip.html(d.data.label);
+        })
+        .on("mouseout", function(d){
+            tooltip.style("display", "none");
+        });
+
+    tooltipaction.exit()
+        .remove();
+
+    text.exit()
+        .remove();
+}; // }}}
+
+function updateAngles(data) {
+    var radline = radius * 0.9
+
+    var lines = svg.select("g.lines")
+        .selectAll("line")
+        .data(data, function(d) { return d.angle; });
+
+    lines.enter()
+        .append("line")
+        .attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", function(d) { return cosDegree(d.angle) * radline; })
+        .attr("y2", function(d) { return sinDegree(d.angle) * radline; })
+        .style("fill", "none")
+        .style("stroke", "white")
+        .style("stroke-width", "2px")
+    
+    lines.exit()
+        .remove();
+
+    var anchor = svg.select("g.arrows")
+        .selectAll("circle")
+        .data(data, function(d) { return d.angle; });
+
+    anchor.enter()
+        .append("circle")
+        .attr("cx", function(d) { return cosDegree(d.angle) * radline; })
+        .attr("cy", function(d) { return sinDegree(d.angle) * radline; })
+        .attr("r", 10)
+        .style("fill", function(d, i) { if(i == 0) { return "green" } else { return "blue" }; })
+        .style("stroke", "black")
+        .style("stroke-width", "1px")
+
+    anchor
+        .on('mousedown', function(d, i) {
+            var timedOut = 0
+            d3.select("svg")
+                .on('mousemove', function(elem, i) {
+
+                    if(!timedOut) {
+                        var x = (width/4) - d3.mouse(this)[0];
+                        var y = (height/2) - d3.mouse(this)[1];
+                        var radian = Math.atan2(y, x); // In radians
+                        var degree = radian * (180 / Math.PI) + 180; 
+                        //console.log("x:"+x+" y:"+y+" rad:"+rad+" deg:"+deg)
+                        svg.selectAll("g.arrows, g.lines")
+                            .attr("transform", "translate("+ originx +","+ originy +") rotate("+ degree +", 0, 0)");
+                    }
+
+                    timedOut = 1
+                    // add 10ms latency to not overlad the cpu
+                    setTimeout(function() { timedOut = 0 }, 10)
+                })
+        .on('mouseup', function(e) {
+            d3.select("svg")
+                 .on('mousemove', null);
+        })
+    });
+
+    anchor.exit()
+        .remove();
+};
+
+</script>
+</body>
+</html>

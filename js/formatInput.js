@@ -44,3 +44,32 @@ function writeLegend(data) { // {{{
     text.exit()
         .remove();
 }; // }}}
+
+
+function cosDegree(degrees) {
+    return Math.cos( degrees * Math.PI / 180);
+}
+function sinDegree(degrees) {
+    return Math.sin( degrees * Math.PI / 180);
+}
+
+/**
+ * Takes schema and slice numbers
+ * Return array of angles
+ */
+function partsToAngles(data) {
+    var angles = [],
+        x = -1,
+        n = data.part.length;
+    while(++x < data.schema) {
+        // Populate angle only with the desired angles
+        var y = -1;
+        while(++y < n) {
+            if( x == data.part[y] ) {
+                angles.push( { "angle": (360 / data.schema * x) } );
+                break;
+            }
+        }
+    }
+    return angles;
+};

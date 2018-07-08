@@ -1,61 +1,58 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<style>
-    svg {
-        background-color: gray;
-    }
-</style>
 <script src="js/d3.v3.js"></script>
 <body>
-    <div class="labelType" style="position:absolute; margin-top: 30px">
-        <input type="radio" name="labelType" value="cos0">Cos0<br>
-        <input type="radio" name="labelType" value="cos1">Cos1<br>
-        <input type="radio" name="labelType" value="cos2" checked="checked">Cos2<br>
-        <input type="radio" name="labelType" value="cos3">Cos3<br>
-        <input type="radio" name="labelType" value="cos4">Cos4<br>
-        <input type="radio" name="labelType" value="cos5">Cos5<br>
-        <input type="radio" name="labelType" value="arc12">Schema 12<br>
-        <input type="radio" name="labelType" value="arc18">Schema 18<br>
+    <div class="radio-group">
+        <input type="radio" id="rcos0" name="radio-group"><label for="rcos0">Cos0</label>
+        <input type="radio" id="rcos1" name="radio-group"><label for="rcos1">Cos1</label>
+        <input type="radio" id="rcos2" name="radio-group" checked="checked"><label for="rcos2">Cos2</label>
+        <input type="radio" id="rcos3" name="radio-group"><label for="rcos3">Cos3</label>
+        <input type="radio" id="rcos4" name="radio-group"><label for="rcos4">Cos4</label>
+        <input type="radio" id="rcos5" name="radio-group"><label for="rcos5">Cos5</label>
+        <input type="radio" id="rarc12" name="radio-group"><label for="rarc12">Schema12</label>
+        <input type="radio" id="rarc18" name="radio-group"><label for="rarc18">Schema18</label>
     </div>
-    <svg width="800" height="800"></svg>
+
+    <svg width="400" height="400" style="background-color: gray;"></svg>
 
 <script>
 // List of predefined angles
 var coses = {
-    "cos0": { "schema": 6, "part": [0] },
-    "cos1": { "schema": 6, "part": [0, 3] },
-    "cos2": { "schema": 6, "part": [0, 2, 4] },
-    "cos3": { "schema": 6, "part": [0, 3, 2, 5] },
-    "cos4": { "schema": 6, "part": [0, 3, 2, 5, 1] },
-    "cos5": { "schema": 6, "part": [0, 3, 2, 5, 1, 4] },
-    "arc12": { "schema": 12, "part": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
-    "arc18": { "schema": 18, "part": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17] }
+    "rcos0": { "schema": 6, "part": [0] },
+    "rcos1": { "schema": 6, "part": [0, 3] },
+    "rcos2": { "schema": 6, "part": [0, 2, 4] },
+    "rcos3": { "schema": 6, "part": [0, 3, 2, 5] },
+    "rcos4": { "schema": 6, "part": [0, 3, 2, 5, 1] },
+    "rcos5": { "schema": 6, "part": [0, 3, 2, 5, 1, 4] },
+    "rarc12": { "schema": 12, "part": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
+    "rarc18": { "schema": 18, "part": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17] }
 };
 
-var width = 800,
-    height = 800,
+var svg = d3.select("svg");
+
+var width = svg.attr("width"),
+    height = svg.attr("height"),
     radius = Math.min(width, height) * 0.5,
     originx = width / 2,
     originy = height / 2;
 
-var visu = d3.select("svg")
-visu
+svg
     .append("g")
     .attr("class", "visu")
-visu
+svg
     .append("g")
     .attr("class", "lines")
-visu
+svg
     .append("g")
     .attr("class", "arrows")
 
 // Starting draw point in the svg
 // rotate -90° to start at noon
-visu.selectAll("g")
+svg.selectAll("g.visu, g.lines, g.arrows")
     .attr("transform", "translate(" + originx + "," + originy + ") rotate(-90, 0, 0)");
 
 // Draw circle
-visu.select("g.visu")
+svg.select("g.visu")
     .append("circle")
     .attr("class", "circle")
     .attr("y1", -(radius * 0.8))
@@ -94,11 +91,11 @@ function partsToAngles(data) {
 };
 
 // default view at init
-change( partsToAngles(coses.cos2) );
+change( partsToAngles(coses.rcos2) );
 // hanle other views
-d3.selectAll('input[name="labelType"]')
+d3.selectAll('input[name="radio-group"]')
     .on("change", function() {
-        labelType = this.value
+        labelType = this.id
         var angles = partsToAngles(coses[labelType]);
         change(angles);
     });
@@ -107,13 +104,11 @@ d3.selectAll('input[name="labelType"]')
 function change(data) {
     var radline = radius * 0.9
 
-    var lines = visu.select(".lines")
+    var lines = svg.select("g.lines")
         .selectAll("line")
         .data(data, function(d) { return d.angle; });
 
     lines.enter()
-        .append("g")
-        .attr("class", "angleSweep")
         .append("line")
         .attr("x1", 0)
         .attr("y1", 0)
@@ -126,17 +121,15 @@ function change(data) {
     lines.exit()
         .remove();
 
-    var anchor = visu.select(".arrows")
+    var anchor = svg.select("g.arrows")
         .selectAll("circle")
         .data(data, function(d) { return d.angle; });
 
     anchor.enter()
-        .append("g")
-        .attr("class", "anchor")
         .append("circle")
         .attr("cx", function(d) { return cosDegree(d.angle) * radline; })
         .attr("cy", function(d) { return sinDegree(d.angle) * radline; })
-        .attr("r", 5)
+        .attr("r", 10)
         .style("fill", function(d, i) { if(i == 0) { return "green" } else { return "blue" }; })
         .style("stroke", "black")
         .style("stroke-width", "1px")
@@ -153,7 +146,7 @@ function change(data) {
                         var radian = Math.atan2(y, x); // In radians
                         var degree = radian * (180 / Math.PI) + 180; 
                         //console.log("x:"+x+" y:"+y+" rad:"+rad+" deg:"+deg)
-                        visu.selectAll("g.arrows, g.lines")
+                        svg.selectAll("g.arrows, g.lines")
                             .attr("transform", "translate("+ originx +","+ originy +") rotate("+ degree +", 0, 0)");
                     }
 

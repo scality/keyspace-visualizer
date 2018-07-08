@@ -59,7 +59,7 @@ function computeRange(data) { // {{{
  */
 function formatInput(dataraw) {
     data = convertRingsh(dataraw)
-    console.table(data)
+    //console.table(data)
 
     /**
      * First: Need to sort by key
@@ -109,5 +109,47 @@ function formatInput(dataraw) {
     
     // Need to move writeLegend to a better place
     writeLegend(servstats);
+    writeLegend2(ringkeysSorted, servstats)
     return ringkeysSorted;
 }; // }}}
+
+function writeLegend2(data, stats) {
+    var table = d3.select("div#infos").append("table");
+    var titles = ["Host", "Members"];
+
+    var headers = table.append('thead').append('tr')
+        .selectAll('th')
+        .data(titles).enter()
+        .append('th')
+        .text(function (d) { return d; })
+
+    var rows = table.append('tbody').selectAll('tr')
+        .data(stats).enter()
+        .append('tr');
+
+    rows
+        .selectAll('td')
+        .data(function (d) {
+            return titles.map(function (k) {
+                return { 'value': d.hostname, 'name': k };
+            })
+        }).enter()
+        .append("td")
+        .attr('data-th', function (d) {
+            return d.name;
+        })
+        .html(function(d) {
+            if(d.name == "Host") {
+                return d.value;
+            } 
+            if(d.name == "Members") {
+                var content = data.forEach(function(s) {
+                    if(d.value == s.host) {
+                        console.log(s.server)
+                        return '<span>'+ s.server + '</span>'
+                    }
+                })
+                return content;
+            }
+        });
+}
