@@ -69,7 +69,7 @@ table.minimalistBlack {
     padding: 5px 4px;
   }
   table.minimalistBlack tbody td {
-    font-size: .7em;
+    font-size: .8em;
   }
   table.minimalistBlack thead {
     background: #CFCFCF;
@@ -80,19 +80,19 @@ table.minimalistBlack {
     border-top: 4px solid black;
   }
   table.minimalistBlack thead th {
-    font-size: .8em;
+    font-size: .9em;
     font-weight: bold;
     color: #000000;
     text-align: left;
   }
   table.minimalistBlack tfoot {
-    font-size: .7em;
+    font-size: .8em;
     font-weight: bold;
     color: #000000;
     border-top: 3px solid #000000;
   }
   table.minimalistBlack tfoot td {
-    font-size: .7em;
+    font-size: .8em;
   }
 
 svg {
