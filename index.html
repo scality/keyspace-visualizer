@@ -37,7 +37,7 @@
 
     <div id="wrapper">
         <div class="svg">
-            <svg width="600" height="600"></svg>
+            <svg width="1200" height="1200"></svg>
         </div>
 
         <div id="infos"></div>
@@ -65,24 +65,15 @@ var svg = d3.select("svg"),
     originy = height / 2;
 
 /* Lines length used ot visualize angles */
-var lineStart = radius * 0.3;
+var lineStart = radius * 0.2;
 var lineLength = radius * 0.9;
+var secondCircle = radius * 0.3
 
 /**
  *  Palet of colors to use
  * SchemeSets appear in d3.v4.js
  * var colorsAvailable = d3.schemeSet1.concat(d3.schemeSet2).concat(d3.schemeSet3);
  */
-/*
-var colorsAvailable = [
-    "#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00",
-    "#a65628","#f781bf","#999999","#66c2a5","#fc8d62",
-    "#8da0cb","#e78ac3","#a6d854","#ffd92f","#e5c494",
-    "#b3b3b3","#8dd3c7","#ffffb3","#bebada","#fb8072",
-    "#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9",
-    "#bc80bd","#ccebc5","#ffed6f"
-]
-*/
 var colorsAvailable = [
     "#e6194b", "#3cb44b", "#ffe119", "#0082c8", "#f58231",
     "#911eb4", "#46f0f0", "#f032e6", "#d2f53c", "#fabebe",
@@ -116,6 +107,8 @@ RingImg.append("g").attr("class", "labels");
 svg.append("g").attr("class", "lines");
 /* Arrows at the end of the lines */
 svg.append("g").attr("class", "arrows");
+var smallslices = svg.append("g").attr("class", "smpie");
+smallslices.append("g").attr("class", "smslices");
 /* Small center circle */
 var smcircle = svg.append("g").attr("class", "smcircle").append("circle");
 smcircle
@@ -123,12 +116,19 @@ smcircle
     .attr("stroke", "white")
     .attr("stroke-width", 2)
     .attr("fill", "none")
+var lcircle =svg.append("g").attr("class", "lcircle").append("circle");
+lcircle
+    .attr("r", secondCircle)
+    .attr("stroke", "white")
+    .attr("stroke-width", 2)
+    .attr("fill", "none")
+
 
 /**
  *  Starting draw point in the svg
  *  Rotate -90° to start at noon
  */
-svg.selectAll("g.pie, g.lines, g.arrows, g.smcircle")
+svg.selectAll("g.pie, g.lines, g.arrows, g.smcircle, g.lcircle, g.smslices, g.smpie")
     .attr("transform", "translate(" + originx + "," + originy + ") rotate(-90, 0, 0)");
 
 // Hidden div to handle texts
@@ -145,6 +145,15 @@ var arc = d3.svg.arc()          // slices configuration
     .padAngle(0)                // space between slices
 	.outerRadius(function() { return radius * 0.8; } )  // size limit
 	.innerRadius(function() { return radius * 0.4; } ); // starting draw
+
+var smpie = d3.layout.pie()
+    .sort(null)
+    .value(function(d) { return d.angle; });
+var smarc = d3.svg.arc()
+    .cornerRadius(0)
+    .padAngle(2 * Math.PI / 180)
+    .outerRadius(function() { return radius * 0.3; } )
+    .innerRadius(function() { return radius * 0.2; } );
 
 /* ------- END: Standard function definitions and configurations }}}-------*/
 
@@ -197,25 +206,29 @@ d3.selectAll('input[name="zoom-group"]')
         originy = height / 2;
         lineStart = radius * 0.3;
         lineLength = radius * 0.9;
-        svg.selectAll("g.pie, g.lines, g.arrows, g.smcircle")
+        secondCircle = radius * 0.3;
+        svg.selectAll("g.pie, g.lines, g.arrows, g.smcircle, g.lcircle, g.smpie")
             .attr("transform", "translate(" + originx + "," + originy + ") rotate(-90, 0, 0)");
         smcircle
-            .attr("r", lineStart)
+            .attr("r", lineStart);
+        lcircle
+            .attr("r", secondCircle);
         change(dataPie);
         updateAngles([]); // hack to resize the angles
         updateAngles(dataAngles);
     });
 
 function change(data) { // {{{
-    //console.table(data);
 	/* ------- PIE SLICES -------*/
 	var slice = RingImg.select(".slices").selectAll("path.slice")
         .data(pie(data), function(d){ return d.data.label; });
 
 	slice.enter()
 		.insert("path")
-		.style("fill", function(d) { return d.data.colour; })
+		.attr("fill", function(d) { return d.data.colour; })
         .attr("class", function(d) { return "slice myshrtsrv" + d.data.host; })
+        .attr("data-startangle", function(d) { return d.startAngle; })
+        .attr("data-endangle", function(d) { return d.endAngle; })
         .style('opacity', 0.8)
         .on('mouseover', function (d, i) {
 	        RingImg.select(".slices").selectAll("path.slice.myshrtsrv" + d.data.host)
@@ -242,7 +255,7 @@ function change(data) { // {{{
 
     slice
 		.transition().duration(1000)
-		.attrTween("d", function(d) {
+		.attrTween("d", function(d, i) {
 			this._current = this._current || d;
             var interpolate = d3.interpolate(this._current, d);
 			this._current = interpolate(0);
@@ -294,11 +307,33 @@ function updateAngles(data) {
         .attr("y1", function(d) { return sinDegree(d.angle) * lineStart; })
         .attr("x2", function(d) { return cosDegree(d.angle) * lineLength; })
         .attr("y2", function(d) { return sinDegree(d.angle) * lineLength; })
-        .style("fill", "none")
-        .style("stroke", "white")
-        .style("stroke-width", "2px")
-    
+        .attr("fill", "none")
+        .attr("stroke", "white")
+        .attr("stroke-width", "2px")
+
     lines.exit().remove();
+
+    var arcs = svg.select("g.smpie")
+        .selectAll("path")
+        .data(data, function(d, i) { return d.startAngle+d.endAngle+d.nbpart });
+
+    arcs.enter()
+        .append("path")
+        .attr("fill", function(d, i) {
+            return colorsAvailable[i];
+        })
+        .attr("transform", "rotate(90, 0, 0)")
+        .attr("d", function(d, i) {
+            var myarc = d3.svg.arc()
+                .padAngle(degRad(0.5))
+                .outerRadius(lineStart)
+                .innerRadius(secondCircle)
+                .startAngle(degRad( d.startAngle ))
+                .endAngle(degRad( d.endAngle ));
+            return myarc();
+        })
+
+    arcs.exit().remove();
 
     var anchor = svg.select("g.arrows")
         .selectAll("circle")
@@ -308,9 +343,11 @@ function updateAngles(data) {
         .append("circle")
         .attr("cx", function(d) { return cosDegree(d.angle) * lineLength; })
         .attr("cy", function(d) { return sinDegree(d.angle) * lineLength; })
+        .attr("stroke", "white")
+        .attr("stroke-width", "2px")
         .attr("r", 10)
         .attr("class", "circle")
-        .attr("style", function(d, i) { if(i == 0) { return "fill: green;" } })
+        .attr("fill", function(d, i) { if(i == 0){return "green";}else{return "blue";} })
 
     anchor
         .on('mousedown', function(d, i) {
@@ -322,7 +359,7 @@ function updateAngles(data) {
                         var radian = Math.atan2(y, x); // In radians
                         var degree = radian * (180 / Math.PI) + 180; 
                         //console.log("x:"+x+" y:"+y+" rad:"+rad+" deg:"+deg)
-                        svg.selectAll("g.arrows, g.lines")
+                        svg.selectAll("g.arrows, g.lines, g.smpie")
                             .attr("transform", "translate("+ originx +","+ originy +") rotate("+ degree +", 0, 0)");
                     }
 

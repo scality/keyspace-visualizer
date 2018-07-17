@@ -51,11 +51,6 @@ input[type="file"] {
     margin-left: 5px;
     margin-right: 5px;
 }
-.circle {
-    fill: blue;
-    stroke: white;
-    stroke-width: 2px;
-}
 
 table.minimalistBlack {
     border: 3px solid #FFF;

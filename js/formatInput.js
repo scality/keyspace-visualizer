@@ -52,6 +52,9 @@ function cosDegree(degrees) {
 function sinDegree(degrees) {
     return Math.sin( degrees * Math.PI / 180);
 }
+function degRad(degree) {
+    return degree * Math.PI / 180
+}
 
 /**
  * Takes schema and slice numbers
@@ -60,16 +63,42 @@ function sinDegree(degrees) {
 function partsToAngles(data) {
     var angles = [],
         x = -1,
-        n = data.part.length;
+        n = data.part.length,
+        slice_size = 360 / data.schema;
     while(++x < data.schema) {
         // Populate angle only with the desired angles
         var y = -1;
         while(++y < n) {
             if( x == data.part[y] ) {
-                angles.push( { "angle": (360 / data.schema * x), "radius": radius } );
+                angles.push( {
+                    "angle": (slice_size * x),
+                    "radius": radius,
+                    "schema": data.schema,
+                    "nbpart": n
+                });
                 break;
             }
         }
     }
-    return angles;
+
+    // get the angle sizes
+    n = angles.length;
+    if(n == 1) {
+        angles[0].startAngle = 0;
+        angles[0].endAngle = 360;
+    } else {
+        x = -1 ; while(++x < n) {
+            if (x == 0) {
+                angles[x].startAngle = angles[n - 1].angle;
+                angles[x].endAngle = 360;
+            } else {
+                angles[x].startAngle = angles[x - 1].angle;
+                angles[x].endAngle = angles[x].angle;
+            }
+        }
+    }
+    // needs to be sorted to generate small arcs cleanly
+    return angles.sort(function(a, b) {
+        return d3.ascending(a.angle, b.angle);
+    });
 };
