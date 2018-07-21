@@ -83,6 +83,7 @@ function partsToAngles(data) {
 
     // get the angle sizes
     n = angles.length;
+    // if only one angle, take the whole circle
     if(n == 1) {
         angles[0].startAngle = 0;
         angles[0].endAngle = 360;
