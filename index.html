@@ -9,12 +9,6 @@
 <body>
     <div class="radios">
         <div class="radio-group">
-            <input type="radio" id="zoom1x" name="zoom-group" checked="checked"><label for="zoom1x">Zoom 1x</label>
-            <input type="radio" id="zoom2x" name="zoom-group"><label for="zoom2x">Zoom 2x</label>
-            <input type="radio" id="zoom3x" name="zoom-group"><label for="zoom3x">Zoom 3x</label>
-        </div>
-
-        <div class="radio-group">
             <input type="radio" id="rcos0" name="radio-group"><label for="rcos0">Cos0</label>
             <input type="radio" id="rcos1" name="radio-group"><label for="rcos1">Cos1</label>
             <input type="radio" id="rcos2" name="radio-group" checked="checked"><label for="rcos2">Cos2</label>
@@ -55,8 +49,8 @@
     <div class="tooltip"></div>
 <script>
 /* ------- Global variables to use {{{-------*/
-var dataPie; // Store the datas for the pie chart, to update during zoom
-var dataAngles; // Store de datas for the line angles, to update during zoom
+var dataPie; // Store the datas for the pie chart
+var dataAngles; // Store de datas for the line angles
 var svg = d3.select("svg"),
     width = svg.attr("width"),
     height = svg.attr("height"),
@@ -128,8 +122,11 @@ lcircle
  *  Starting draw point in the svg
  *  Rotate -90° to start at noon
  */
-svg.selectAll("g.pie, g.lines, g.arrows, g.smcircle, g.lcircle, g.smslices, g.smpie")
+svg.selectAll("g.lines, g.arrows, g.smcircle, g.lcircle, g.smslices, g.smpie")
     .attr("transform", "translate(" + originx + "," + originy + ") rotate(-90, 0, 0)");
+// No need to rotate the pie chart
+svg.selectAll("g.pie")
+    .attr("transform", "translate(" + originx + "," + originy + ")");
 
 // Hidden div to handle texts
 var tooltip = d3.select("div.tooltip");
@@ -191,33 +188,7 @@ d3.selectAll('input[name="radio-group"]')
         updateAngles(dataAngles);
     });
 
-d3.selectAll('input[name="zoom-group"]')
-    .on("change", function() {
-        var defw = 600,
-            defh = 600;
-        if(this.id == "zoom1x") { svg.attr("width", defw).attr("height", defh) }
-        if(this.id == "zoom2x") { svg.attr("width", defw * 2).attr("height", defh * 2) }
-        if(this.id == "zoom3x") { svg.attr("width", defw * 3).attr("height", defh * 3) }
-
-        width = svg.attr("width"),
-        height = svg.attr("height"),
-        radius = Math.min(width, height) * 0.5,
-        originx = width / 2,
-        originy = height / 2;
-        lineStart = radius * 0.3;
-        lineLength = radius * 0.9;
-        secondCircle = radius * 0.3;
-        svg.selectAll("g.pie, g.lines, g.arrows, g.smcircle, g.lcircle, g.smpie")
-            .attr("transform", "translate(" + originx + "," + originy + ") rotate(-90, 0, 0)");
-        smcircle
-            .attr("r", lineStart);
-        lcircle
-            .attr("r", secondCircle);
-        change(dataPie);
-        updateAngles([]); // hack to resize the angles
-        updateAngles(dataAngles);
-    });
-
+var changedone = 0;
 function change(data) { // {{{
 	/* ------- PIE SLICES -------*/
 	var slice = RingImg.select(".slices").selectAll("path.slice")
@@ -227,8 +198,8 @@ function change(data) { // {{{
 		.insert("path")
 		.attr("fill", function(d) { return d.data.colour; })
         .attr("class", function(d) { return "slice myshrtsrv" + d.data.host; })
-        .attr("data-startangle", function(d) { return d.startAngle; })
-        .attr("data-endangle", function(d) { return d.endAngle; })
+        .attr("startangle", function(d) { return d.startAngle; })
+        .attr("endangle", function(d) { return d.endAngle; })
         .style('opacity', 0.8)
         .on('mouseover', function (d, i) {
 	        RingImg.select(".slices").selectAll("path.slice.myshrtsrv" + d.data.host)
@@ -294,9 +265,20 @@ function change(data) { // {{{
 
     text.exit()
         .remove();
+    changedone = 1;
 }; // }}}
 
 function updateAngles(data) {
+    // Wait for data to be generated
+    if(changedone != 1) {
+        setTimeout(function() {
+            updateAngles(data)
+        }, 300);
+        return;
+    }
+    var extraData = pie(dataPie)
+    //console.table(extraData)
+
     var lines = svg.select("g.lines")
         .selectAll("line")
         .data(data, function(d) { return d.angle; });
@@ -320,7 +302,17 @@ function updateAngles(data) {
     arcs.enter()
         .append("path")
         .attr("fill", function(d, i) {
-            return colorsAvailable[i];
+            var x = -1; while(++x < extraData.length) {
+                // We are at the end of the array, return the color
+                if(x == extraData.length - 1) {
+                    return extraData[x].data.colour;
+                }
+                if(degRad(d.endAngle) > (extraData[x].endAngle)) {
+                    continue
+                } else {
+                    return extraData[x].data.colour;
+                }
+            }
         })
         .attr("transform", "rotate(90, 0, 0)")
         .attr("d", function(d, i) {
@@ -361,6 +353,30 @@ function updateAngles(data) {
                         //console.log("x:"+x+" y:"+y+" rad:"+rad+" deg:"+deg)
                         svg.selectAll("g.arrows, g.lines, g.smpie")
                             .attr("transform", "translate("+ originx +","+ originy +") rotate("+ degree +", 0, 0)");
+
+                        arcs
+                        .attr("fill", function(e, j) {
+                            var newangle = degRad(e.endAngle) + radian - degRad(90);
+                            while(newangle > degRad(360)) {
+                                newangle = newangle - degRad(360);
+                            }
+                            while(newangle < 0) {
+                                newangle = newangle + degRad(360);
+                            }
+                            var x = -1; while(++x < extraData.length) {
+                                // We are at the end of the array, return the color
+                                if(x == extraData.length - 1) {
+                                        var a = degRad(e.endAngle) + radian - degRad(90)
+                                    return extraData[x].data.colour;
+                                }
+                                if(newangle > (extraData[x].endAngle)) {
+                                    continue
+                                } else {
+                                        var a = degRad(e.endAngle) + radian - degRad(90)
+                                    return extraData[x].data.colour;
+                                }
+                            }
+                        });
                     }
 
                     timedOut = 1
