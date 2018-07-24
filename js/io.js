@@ -51,17 +51,6 @@ function writeLegend(data) { // {{{
         .remove();
 }; // }}}
 
-
-function cosDegree(degrees) {
-    return Math.cos( degrees * Math.PI / 180);
-}
-function sinDegree(degrees) {
-    return Math.sin( degrees * Math.PI / 180);
-}
-function degRad(degree) {
-    return degree * Math.PI / 180
-}
-
 /**
  * Takes schema and slice numbers
  * Return array of angles

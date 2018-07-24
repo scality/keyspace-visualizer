@@ -292,10 +292,10 @@ function updateAngles(data) {
 
     lines.enter()
         .append("line")
-        .attr("x1", function(d) { return cosDegree(d.angle) * lineStart; })
-        .attr("y1", function(d) { return sinDegree(d.angle) * lineStart; })
-        .attr("x2", function(d) { return cosDegree(d.angle) * lineLength; })
-        .attr("y2", function(d) { return sinDegree(d.angle) * lineLength; })
+        .attr("x1", function(d) { return degreeToCosinus(d.angle) * lineStart; })
+        .attr("y1", function(d) { return degreeToSinus(d.angle) * lineStart; })
+        .attr("x2", function(d) { return degreeToCosinus(d.angle) * lineLength; })
+        .attr("y2", function(d) { return degreeToSinus(d.angle) * lineLength; })
         .attr("fill", "none")
         .attr("stroke", "white")
         .attr("stroke-width", "2px")
@@ -314,7 +314,7 @@ function updateAngles(data) {
                 if(x == extraData.length - 1) {
                     return extraData[x].data.colour;
                 }
-                if(degRad(d.endAngle) > (extraData[x].endAngle)) {
+                if(degreeToRadian(d.endAngle) > (extraData[x].endAngle)) {
                     continue
                 } else {
                     return extraData[x].data.colour;
@@ -324,11 +324,11 @@ function updateAngles(data) {
         .attr("transform", "rotate(90, 0, 0)")
         .attr("d", function(d, i) {
             var myarc = d3.svg.arc()
-                .padAngle(degRad(0.5))
+                .padAngle(degreeToRadian(0.5))
                 .outerRadius(lineStart)
                 .innerRadius(secondCircle)
-                .startAngle(degRad( d.startAngle ))
-                .endAngle(degRad( d.endAngle ));
+                .startAngle(degreeToRadian( d.startAngle ))
+                .endAngle(degreeToRadian( d.endAngle ));
             return myarc();
         })
 
@@ -340,8 +340,8 @@ function updateAngles(data) {
 
     anchor.enter()
         .append("circle")
-        .attr("cx", function(d) { return cosDegree(d.angle) * lineLength; })
-        .attr("cy", function(d) { return sinDegree(d.angle) * lineLength; })
+        .attr("cx", function(d) { return degreeToCosinus(d.angle) * lineLength; })
+        .attr("cy", function(d) { return degreeToSinus(d.angle) * lineLength; })
         .attr("stroke", "white")
         .attr("stroke-width", "2px")
         .attr("r", 10)
@@ -363,23 +363,23 @@ function updateAngles(data) {
 
                         arcs
                         .attr("fill", function(e, j) {
-                            var newangle = degRad(e.endAngle) + radian - degRad(90);
-                            while(newangle > degRad(360)) {
-                                newangle = newangle - degRad(360);
+                            var newangle = degreeToRadian(e.endAngle) + radian - degreeToRadian(90);
+                            while(newangle > degreeToRadian(360)) {
+                                newangle = newangle - degreeToRadian(360);
                             }
                             while(newangle < 0) {
-                                newangle = newangle + degRad(360);
+                                newangle = newangle + degreeToRadian(360);
                             }
                             var x = -1; while(++x < extraData.length) {
                                 // We are at the end of the array, return the color
                                 if(x == extraData.length - 1) {
-                                        var a = degRad(e.endAngle) + radian - degRad(90)
+                                        var a = degreeToRadian(e.endAngle) + radian - degreeToRadian(90)
                                     return extraData[x].data.colour;
                                 }
                                 if(newangle > (extraData[x].endAngle)) {
                                     continue
                                 } else {
-                                        var a = degRad(e.endAngle) + radian - degRad(90)
+                                        var a = degreeToRadian(e.endAngle) + radian - degreeToRadian(90)
                                     return extraData[x].data.colour;
                                 }
                             }
