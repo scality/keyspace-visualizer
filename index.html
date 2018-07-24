@@ -152,11 +152,6 @@ var arc = d3.svg.arc()          // slices configuration
 var smpie = d3.layout.pie()
     .sort(null)
     .value(function(d) { return d.angle; });
-var smarc = d3.svg.arc()
-    .cornerRadius(0)
-    .padAngle(2 * Math.PI / 180)
-    .outerRadius(function() { return radius * 0.3; } )
-    .innerRadius(function() { return radius * 0.2; } );
 
 /* ------- END: Standard function definitions and configurations }}}-------*/
 
@@ -173,24 +168,26 @@ d3.select("input.datafile")
             d3.text(dataURL, function(d) {
                 dataPie = formatInput(d);
                 svg.select("g.smpie").html("")
-                changedone = 0; //wait for "change" to finish before update angles
-                change(dataPie);
+                
+                /* lock wait for the "updateChart" function, to run before updateAngles */
+                updateChartdone = 0;
+                updateChart(dataPie);
                 updateAngles(dataAngles);
             });
         };
         reader.readAsDataURL(file);
     }); // }}}
 
-// Data example
+// Data default example
 d3.text("default-ringsh.txt", function(data) {
     dataPie = formatInput(data);
-    change(dataPie);
+    updateChart(dataPie);
     updateAngles(dataAngles);
 });
 
 // default lines view at init
 dataAngles = partsToAngles(coses.rcos2);
-updateAngles( dataAngles );
+updateAngles(dataAngles);
 d3.selectAll('input[name="radio-group"]')
     .on("change", function() {
         labelType = this.id
@@ -198,8 +195,22 @@ d3.selectAll('input[name="radio-group"]')
         updateAngles(dataAngles);
     });
 
-var changedone = 0;
-function change(data) { // {{{
+/* lock wait for the "updateChart" function, to run before updateAngles */
+var updateChartLoaded = 0;
+
+
+/**
+ * @param data
+ * 
+ * "data" should be equal to the "dataPie" global variable to share information with updateAngles
+ * 
+ * takes a computed array of keys
+ * draw a large piechart
+ * handle onmouseover slice
+ * handle tooltip over a slice
+ * 
+ */
+function updateChart(data) {
 	/* ------- PIE SLICES -------*/
 	var slice = RingImg.select(".slices").selectAll("path.slice")
         .data(pie(data), function(d){ return d.data.label; });
@@ -275,12 +286,20 @@ function change(data) { // {{{
 
     text.exit()
         .remove();
-    changedone = 1;
+    updateChartLoaded = 1;
 }; // }}}
 
+/**
+ * @param data
+ * 
+ * wait the "updateChartLoaded" lock to be free before doing anything
+ * 
+ * update the lines representing the selected SCHEMA angles
+ * draw the small pie chart
+ */
 function updateAngles(data) {
     // Wait for data to be generated
-    if(changedone != 1) {
+    if(updateChartLoaded != 1) {
         setTimeout(function() {
             updateAngles(data)
         }, 300);
@@ -327,7 +346,7 @@ function updateAngles(data) {
         .attr("transform", "rotate(90, 0, 0)")
         .attr("d", function(d, i) {
             var myarc = d3.svg.arc()
-                .padAngle(degreeToRadian(0.5))
+                .padAngle(degreeToRadian(0.8))
                 .outerRadius(lineStart)
                 .innerRadius(secondCircle)
                 .startAngle(degreeToRadian( d.startAngle ))
