@@ -209,7 +209,14 @@ function computeRange(data) {
     return data;
 };
 
+/**
+ * @param {*} data 
+ * @param {*} rawstats 
+ * 
+ * Write a table of legend in div#infos
+ */
 function writeLegend2(data, rawstats) {
+    // collator used to sort alphanumerically
     var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
     function sortHost(obj) {
         return obj.sort(function(a, b) {
