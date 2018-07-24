@@ -40,8 +40,16 @@ function sortByKeys(arrayOfKeys) {
 } 
 
 /**
- * @param {*} data 
- * Convert ringsh.txt input to valuable data
+ * @param {*} ringsh
+ * 
+ * @return data 
+ * 
+ * Convert ringsh.txt input to json
+ * 
+ * create a unique ID (host), dash separated, with:
+ * the RING name
+ * the element (rack, server, diskgroup)
+ * the chord port
  */
 function convertRingsh(ringsh) {
     var data = []
@@ -49,15 +57,19 @@ function convertRingsh(ringsh) {
     var x = -1 ; while(++x < lines.length) {
         var fields = lines[x].split(" ");
 
+        // first field of ringsh.txt is "supervisor", ignore the rest (empty lines, etc..)
         if(fields[0] == "supervisor") {
-            // Check the format
-            if(fields.length != 6) {
-                alert("Invalid ringsh format, I need 6 fields, space separated")
+            try {
+                // TODO: add more checks 
+                if(fields.length != 6)
+                    throw "Invalid ringsh format, I need 6 fields, space separated";
             }
-            // generate unique hostname
+            catch(err) {
+                alert(err);
+            }
             var host = fields[2] +"-"+ fields[3] +"-"+ fields[4];
 
-            var key = parseInt("0x"+ fields[5]);
+            var key = parseInt("0x" + fields[5]);
             data.push( {server: host, key: key, nativekey: fields[5]} )
         }
     }
@@ -65,38 +77,37 @@ function convertRingsh(ringsh) {
 };
 
 /**
- * Takes schema and slice numbers
- * Return array of angles
+ * @param {*} data 
+ * 
+ * @return array of angles
+ * 
+ * data is a json object, in the form of:
+ * { "schema": 6, "part": [0, 2, 4] }
+ * 
  */
 function partsToAngles(data) {
     var angles = [],
-        x = -1,
         n = data.part.length,
         slice_size = 360 / data.schema;
-    while(++x < data.schema) {
-        // Populate angle only with the desired angles
-        var y = -1;
-        while(++y < n) {
+
+    var x=-1; while(++x < data.schema) {
+        var y=-1; while(++y < n) {
             if( x == data.part[y] ) {
-                angles.push( {
+                angles.push({
                     "angle": (slice_size * x),
-                    "radius": radius,
                     "schema": data.schema,
-                    "nbpart": n
+                    "nbpart": n // need nbpart to handle a dynamic change in d3js
                 });
                 break;
             }
         }
     }
 
-    // get the angle sizes
-    n = angles.length;
-    // if only one angle, take the whole circle
     if(n == 1) {
         angles[0].startAngle = 0;
         angles[0].endAngle = 360;
     } else {
-        x = -1 ; while(++x < n) {
+        x=-1; while(++x < n) {
             if (x == 0) {
                 angles[x].startAngle = angles[n - 1].angle;
                 angles[x].endAngle = 360;
@@ -107,7 +118,7 @@ function partsToAngles(data) {
         }
     }
 
-    // needs to be sorted to generate clean small arcs
+    // needs to be sorted by angle to generate clean small arcs
     return angles.sort(function(a, b) {
         return d3.ascending(a.angle, b.angle);
     });
