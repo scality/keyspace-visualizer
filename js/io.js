@@ -24,34 +24,6 @@ function convertRingsh(ringsh) {
 };/// }}}
 
 /**
- * 
- * @param {*} data 
- * take a computed key nodes array to display an informative table
- */
-function writeLegend(data) { // {{{
-    var text = legend.selectAll("div.server")
-        .data(data, function(d) { return d.hostname+d.percs;});
-
-    text
-        .enter()
-        .append("div")
-        .attr("class", "server")
-        .style("width", 500)
-        .style("border-top", function(d) { return "4px solid " + d.color; })
-        .style("border-left", function(d) { return "2px solid " + d.color; })
-        .append("span")
-        .text(function(d) { return d.hostname; })
-        .append("span")
-        .attr("class", "ringspace")
-        .text(function(d) { 
-            return " | Ring space: " + d3.format(".3%")(d.percs);
-        });
-
-    text.exit()
-        .remove();
-}; // }}}
-
-/**
  * Takes schema and slice numbers
  * Return array of angles
  */
@@ -97,4 +69,57 @@ function partsToAngles(data) {
     return angles.sort(function(a, b) {
         return d3.ascending(a.angle, b.angle);
     });
+};
+
+/**
+ * Takes ringsh.txt file as input
+ * @param {*} ringData
+ * 
+ * 1. convert ringData to a manipulable format
+ * 2. sort the datas by key
+ * 3. calculate the range between each keys (size & %)
+ * 4. pick up a color per server
+ * 5. compute the space used per server
+ * 6. use the computed datas to write the legen table
+ * 
+ */
+function formatInput(ringData) {
+    // 1.
+    data = convertRingsh(ringData)
+ 
+    // 2.
+    var ringkeysSorted = sortByKeys(data);
+    
+    // 3.
+    computeRange(ringkeysSorted);
+    
+    // 4.
+    var hostColor = {};
+    ringkeysSorted.forEach(function(data) {
+        // add the shortname in the array
+        data.host = getShortName(data.server)
+
+        if(!(data.host in hostColor)) {
+            var sz = Object.keys(hostColor).length
+            hostColor[data.host] = colorsAvailable[sz];
+        }
+        //key = hexPadded(data.key, 40);
+        data.colour = hostColor[data.host];
+        data.label = data.server + "<br/>" + data.nativekey + "<br/>" + data.colour;
+    });
+    
+    // 5. use the previous hostColor dict to filter per host
+    var servstats = []
+    var servlist = Object.keys(hostColor);
+    servlist.forEach(function(data) {
+        var a = ringkeysSorted.filter(({host}) => host == data);
+        var b = a.reduce((sum, value) => sum + value.keysize, 0);
+        var c = a.reduce((sum, value) => sum + value.perc, 0);
+        var d = hostColor[data];
+        servstats.push({hostname: data, keysizes: b, percs: c, color: d});
+    });
+    
+    // 6.
+    writeLegend2(ringkeysSorted, servstats)
+    return ringkeysSorted;
 };
