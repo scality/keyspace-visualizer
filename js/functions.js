@@ -195,20 +195,16 @@ function getShortName(nodeName) {
  * 
  */
 function computeRange(data) {
-    var ringSizeLimit = parseInt("0x" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"),
-        n = data.length,
-        keySize,
-        percent;
+    var ringSizeLimit = parseInt("0x" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    var n = data.length;
 
     var x = -1; while(++x < n) {
         if(x == 0) { // First element, we need to calcul the range from the last element in the array
-            keySize = ringSizeLimit - data[n-1].key + data[x].key;
+            data[x].keysize = ringSizeLimit - data[n-1].key + data[x].key;
         } else { // need to compare with the previous element
-            keySize = data[x].key - data[x - 1].key;
+            data[x].keysize = data[x].key - data[x - 1].key;
         }
-        percent = (keySize / ringSizeLimit)
-        data[x].keysize = keySize;
-        data[x].perc = percent;
+        data[x].perc = data[x].keysize / ringSizeLimit;
     }
     return data;
 };
