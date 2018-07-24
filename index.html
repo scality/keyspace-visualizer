@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<title>Scality Keyspace visualizer</title>
 <link rel="stylesheet" href="css/style.css">
 <script src="js/d3.v3.js"></script>
 <script src="js/formatInput.js"></script>
@@ -39,12 +40,14 @@
 
     <div class="warning">TODO
         <ul>
-            <li>Change anchors circle color according to the current slice.</li>
             <li>Remove a slice when clicking on it, and rearrange the pie.</li>
-            <li>Break out the pie to represent Datacenters.</li>
+            <li>Find a way to represent sites/diskgroups.</li>
+            <li>Extend the large pie slice to the small pie when a line is over.</li>
+            <li>Refactor the code to make it more readable.</li>
         </ul>
     </div>
     <div class="success">Color scheme updated.</div>
+    <div class="success">The small pie in center is now updated with the appopriate colors.</div>
 
     <div class="tooltip"></div>
 <script>
@@ -59,7 +62,7 @@ var svg = d3.select("svg"),
     originy = height / 2;
 
 /* Lines length used ot visualize angles */
-var lineStart = radius * 0.2;
+var lineStart = radius * 0.1;
 var lineLength = radius * 0.9;
 var secondCircle = radius * 0.3
 
@@ -166,7 +169,10 @@ d3.select("input.datafile")
             var dataURL = evt.target.result;
             d3.text(dataURL, function(d) {
                 dataPie = formatInput(d);
+                svg.select("g.smpie").html("")
+                changedone = 0; //wait for "change" to finish before update angles
                 change(dataPie);
+                updateAngles(dataAngles);
             });
         };
         reader.readAsDataURL(file);
@@ -176,6 +182,7 @@ d3.select("input.datafile")
 d3.text("default-ringsh.txt", function(data) {
     dataPie = formatInput(data);
     change(dataPie);
+    updateAngles(dataAngles);
 });
 
 // default lines view at init
@@ -297,7 +304,7 @@ function updateAngles(data) {
 
     var arcs = svg.select("g.smpie")
         .selectAll("path")
-        .data(data, function(d, i) { return d.startAngle+d.endAngle+d.nbpart });
+        .data(data, function(d, i) { return d.startAngle+d.endAngle+d.nbpart+d.schema });
 
     arcs.enter()
         .append("path")
