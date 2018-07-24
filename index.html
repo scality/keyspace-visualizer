@@ -145,7 +145,7 @@ var pie = d3.layout.pie()
 
 var arc = d3.svg.arc()          // slices configuration
     .cornerRadius(5)            // rounding the slices
-    .padAngle(0)            // space between slices
+    .padAngle(0.005)            // space between slices
 	.outerRadius(function() { return radius * 0.8; } )  // size limit
 	.innerRadius(function() { return radius * 0.4; } ); // starting draw
 
