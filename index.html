@@ -4,7 +4,6 @@
 <link rel="stylesheet" href="css/style.css">
 <script src="js/d3.v3.js"></script>
 <script src="js/functions.js"></script>
-<!-- }}} -->
 
 <body>
     <div class="radios">
@@ -52,7 +51,7 @@
     <div class="tooltip"></div>
 
 <script>
-/* ------- Global variables to use {{{-------*/
+/* ------- Global variables -------*/
 var dataPie; // Store the datas for the pie chart
 var dataAngles; // Store de datas for the line angles
 var svg = d3.select("svg"),
@@ -62,13 +61,13 @@ var svg = d3.select("svg"),
     originx = width / 2,
     originy = height / 2;
 
-/* Lines length used ot visualize angles */
+/* Lines length used to visualize angles */
 var lineStart = radius * 0.1;
 var lineLength = radius * 0.9;
 var secondCircle = radius * 0.3
 
 /**
- *  Palet of colors to use
+ * Palet of colors to use
  * SchemeSets appear in d3.v4.js
  * var colorsAvailable = d3.schemeSet1.concat(d3.schemeSet2).concat(d3.schemeSet3);
  */
@@ -92,18 +91,22 @@ var coses = {
     "rarc18": { "schema": 18, "part": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17] }
 };
 
-/* ------- END: Global variables to use }}}-------*/
+/* ------- END: Global variables -------*/
+
 /* ------- DOM Selection {{{-------*/
 // Group to handle key space slices pie chart
 var RingImg = svg.append("g").attr("class", "pie");
 
-/* Sclices */
+/* Slices */
 RingImg.append("g").attr("class", "slices");
+
 /* Tooltip texts */
 RingImg.append("g").attr("class", "labels");
+
 /* Lines */
 svg.append("g").attr("class", "lines");
-/* Arrows at the end of the lines */
+
+/* Arrows/circles at the end of the lines */
 svg.append("g").attr("class", "arrows");
 var smallslices = svg.append("g").attr("class", "smpie");
 smallslices.append("g").attr("class", "smslices");
@@ -121,7 +124,6 @@ lcircle
     .attr("stroke-width", 2)
     .attr("fill", "none")
 
-
 /**
  *  Starting draw point in the svg
  *  Rotate -90° to start at noon
@@ -132,18 +134,18 @@ svg.selectAll("g.lines, g.arrows, g.smcircle, g.lcircle, g.smslices, g.smpie")
 svg.selectAll("g.pie")
     .attr("transform", "translate(" + originx + "," + originy + ")");
 
-// Hidden div to handle texts
 var tooltip = d3.select("div.tooltip");
 
-/* ------- END: DOM Selection }}}-------*/
-/* ------- Standard configurations and function definitions {{{-------*/
+/* ------- END: DOM Selection -------*/
+
+/* ------- d3js function configurations -------*/
 var pie = d3.layout.pie()
 	.sort(null)
 	.value(function(d) { return parseInt(d.keysize) });
 
 var arc = d3.svg.arc()          // slices configuration
     .cornerRadius(5)            // rounding the slices
-    .padAngle(0)                // space between slices
+    .padAngle(0)            // space between slices
 	.outerRadius(function() { return radius * 0.8; } )  // size limit
 	.innerRadius(function() { return radius * 0.4; } ); // starting draw
 
