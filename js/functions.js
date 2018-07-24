@@ -203,8 +203,6 @@ function computeRange(data) {
     var x = -1; while(++x < n) {
         if(x == 0) { // First element, we need to calcul the range from the last element in the array
             keySize = ringSizeLimit - data[n-1].key + data[x].key;
-        } else if(x == n-1) { // Last element, same range as the first element
-            keySize = data[0].keysize
         } else { // need to compare with the previous element
             keySize = data[x].key - data[x - 1].key;
         }
