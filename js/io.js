@@ -1,4 +1,5 @@
 /**
+ * @param {*} data 
  * Convert ringsh.txt input to valuable data {{{
  */
 function convertRingsh(ringsh) {
@@ -22,6 +23,11 @@ function convertRingsh(ringsh) {
     return data;
 };/// }}}
 
+/**
+ * 
+ * @param {*} data 
+ * take a computed key nodes array to display an informative table
+ */
 function writeLegend(data) { // {{{
     var text = legend.selectAll("div.server")
         .data(data, function(d) { return d.hostname+d.percs;});
