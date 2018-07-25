@@ -48,7 +48,7 @@ function sortByKeys(arrayOfKeys) {
  *
  * create a unique ID (host), dash separated, with:
  * the RING name
- * the element (rack, server, diskgroup)
+ * the element (rack, server, diskgroup, IP)
  * the chord port
  */
 function convertRingsh(ringsh) {
@@ -135,7 +135,7 @@ function partsToAngles(data) {
  * 3. calculate the range between each keys (size & %)
  * 4. pick up a color per server
  * 5. compute the space used per server
- * 6. use the computed datas to write the legen table
+ * 6. use the computed datas to write the legend table
  *
  */
 function formatInput(ringData) {
