@@ -98,31 +98,43 @@ var coses = {
 var RingImg = svg.append("g").attr("class", "pie");
 
 /* Slices */
-RingImg.append("g").attr("class", "slices");
+RingImg.append("g")
+.attr("class", "slices");
 
 /* Tooltip texts */
-RingImg.append("g").attr("class", "labels");
+RingImg.append("g")
+    .attr("class", "labels");
 
 /* Lines */
-svg.append("g").attr("class", "lines");
+svg.append("g")
+    .attr("class", "lines");
 
 /* Arrows/circles at the end of the lines */
-svg.append("g").attr("class", "arrows");
-var smallslices = svg.append("g").attr("class", "smpie");
-smallslices.append("g").attr("class", "smslices");
-/* Small center circle */
-var smcircle = svg.append("g").attr("class", "smcircle").append("circle");
-smcircle
+svg.append("g")
+    .attr("class", "arrows");
+
+svg.append("g")
+    .attr("class", "smpie")
+    .append("g")
+    .attr("class", "smslices");
+
+/* Small inner center circle */
+svg.append("g")
+    .attr("class", "smcircle")
+    .append("circle")
     .attr("r", lineStart)
     .attr("stroke", "white")
     .attr("stroke-width", 2)
-    .attr("fill", "none")
-var lcircle =svg.append("g").attr("class", "lcircle").append("circle");
-lcircle
+    .attr("fill", "none");
+
+/* Small outer center circle */
+svg.append("g")
+    .attr("class", "lcircle")
+    .append("circle")
     .attr("r", secondCircle)
     .attr("stroke", "white")
     .attr("stroke-width", 2)
-    .attr("fill", "none")
+    .attr("fill", "none");
 
 /**
  *  Starting draw point in the svg
@@ -330,6 +342,7 @@ function updateAngles(data) {
 
     arcs.enter()
         .append("path")
+        .attr("opacity", .8)
         .attr("fill", function(d, i) {
             var x = -1; while(++x < extraData.length) {
                 // We are at the end of the array, return the color
@@ -381,9 +394,10 @@ function updateAngles(data) {
                         var degree = radian * (180 / Math.PI) + 180; 
                         //console.log("x:"+x+" y:"+y+" rad:"+rad+" deg:"+deg)
                         svg.selectAll("g.arrows, g.lines, g.smpie")
-                            .attr("transform", "translate("+ originx +","+ originy +") rotate("+ degree +", 0, 0)");
+                        .attr("transform", "translate("+ originx +","+ originy +") rotate("+ degree +", 0, 0)");
 
                         arcs
+                        .attr("opacity", .8)
                         .attr("fill", function(e, j) {
                             var newangle = degreeToRadian(e.endAngle) + radian - degreeToRadian(90);
                             while(newangle > degreeToRadian(360)) {
