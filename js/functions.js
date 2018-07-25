@@ -1,7 +1,7 @@
 /**
- * 
- * @param {*} degree 
- * 
+ *
+ * @param {*} degree
+ *
  * @return a cosinus
  */
 function degreeToCosinus(degree) {
@@ -9,9 +9,9 @@ function degreeToCosinus(degree) {
 }
 
 /**
- * 
- * @param {*} degree 
- * 
+ *
+ * @param {*} degree
+ *
  * @return a sinus
  */
 function degreeToSinus(degree) {
@@ -19,9 +19,9 @@ function degreeToSinus(degree) {
 }
 
 /**
- * 
- * @param {*} degree 
- * 
+ *
+ * @param {*} degree
+ *
  * @return a radian
  */
 function degreeToRadian(degree) {
@@ -30,22 +30,22 @@ function degreeToRadian(degree) {
 
 /**
  * @param {*} arrayOfKeys
- * 
+ *
  * @return the arrayOfKeys array sorted by object.key
  */
 function sortByKeys(arrayOfKeys) {
     return arrayOfKeys.sort(function(a, b) {
         return d3.ascending(a.key, b.key);
     });
-} 
+}
 
 /**
  * @param {*} ringsh
- * 
- * @return data 
- * 
+ *
+ * @return data
+ *
  * Convert ringsh.txt input to json
- * 
+ *
  * create a unique ID (host), dash separated, with:
  * the RING name
  * the element (rack, server, diskgroup)
@@ -60,7 +60,7 @@ function convertRingsh(ringsh) {
         // first field of ringsh.txt is "supervisor", ignore the rest (empty lines, etc..)
         if(fields[0] == "supervisor") {
             try {
-                // TODO: add more checks 
+                // TODO: add more checks
                 if(fields.length != 6)
                     throw "Invalid ringsh format, I need 6 fields, space separated";
             }
@@ -77,13 +77,13 @@ function convertRingsh(ringsh) {
 };
 
 /**
- * @param {*} data 
- * 
+ * @param {*} data
+ *
  * @return array of angles
- * 
+ *
  * data is a json object, in the form of:
  * { "schema": 6, "part": [0, 2, 4] }
- * 
+ *
  */
 function partsToAngles(data) {
     var angles = [],
@@ -127,27 +127,27 @@ function partsToAngles(data) {
 /**
  * Takes ringsh.txt file as input
  * @param {*} ringData
- * 
+ *
  * @return computedSortedArrayOfKeys
- * 
+ *
  * 1. convert ringData to a manipulable format
  * 2. sort the datas by key
  * 3. calculate the range between each keys (size & %)
  * 4. pick up a color per server
  * 5. compute the space used per server
  * 6. use the computed datas to write the legen table
- * 
+ *
  */
 function formatInput(ringData) {
     // 1.
     data = convertRingsh(ringData)
- 
+
     // 2.
     var ringkeysSorted = sortByKeys(data);
-    
+
     // 3.
     computeRange(ringkeysSorted);
-    
+
     // 4.
     var hostColor = {};
     ringkeysSorted.forEach(function(data) {
@@ -162,7 +162,7 @@ function formatInput(ringData) {
         data.colour = hostColor[data.host];
         data.label = data.server + "<br/>" + data.nativekey + "<br/>" + data.colour;
     });
-    
+
     // 5. use the previous hostColor dict to filter per host
     var servstats = []
     var servlist = Object.keys(hostColor);
@@ -173,7 +173,7 @@ function formatInput(ringData) {
         var d = hostColor[data];
         servstats.push({hostname: data, keysizes: b, percs: c, color: d});
     });
-    
+
     // 6.
     writeLegend2(ringkeysSorted, servstats)
     return ringkeysSorted;
@@ -181,9 +181,9 @@ function formatInput(ringData) {
 
 /**
  * @param {*} nodeName
- * 
+ *
  * @return serverAddress
- * 
+ *
  * nodeName can be:
  * an IP address
  * a nodename in the format: RING-server-name-fqdn-nodenumber
@@ -199,11 +199,11 @@ function getShortName(nodeName) {
 };
 
 /**
- * @param {*} data 
- * 
+ * @param {*} data
+ *
  * @return data
  *  populated with range sizes and percents
- * 
+ *
  */
 function computeRange(data) {
     var ringSizeLimit = parseInt("0x" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
@@ -221,9 +221,9 @@ function computeRange(data) {
 };
 
 /**
- * @param {*} data 
- * @param {*} rawstats 
- * 
+ * @param {*} data
+ * @param {*} rawstats
+ *
  * Write a table of legend in div#infos
  */
 function writeLegend2(data, rawstats) {
@@ -279,3 +279,4 @@ function writeLegend2(data, rawstats) {
     })
     d3.select("th#members").attr("colspan", colnumbers);
 }
+

@@ -57,7 +57,7 @@ var dataAngles; // Store de datas for the line angles
 var svg = d3.select("svg"),
     width = svg.attr("width"),
     height = svg.attr("height"),
-	radius = Math.min(width, height) * 0.5,
+    radius = Math.min(width, height) * 0.5,
     originx = width / 2,
     originy = height / 2;
 
@@ -93,7 +93,7 @@ var coses = {
 
 /* ------- END: Global variables -------*/
 
-/* ------- DOM Selection {{{-------*/
+/* ------- DOM Selection -------*/
 // Group to handle key space slices pie chart
 var RingImg = svg.append("g").attr("class", "pie");
 
@@ -152,24 +152,24 @@ var tooltip = d3.select("div.tooltip");
 
 /* ------- d3js function configurations -------*/
 var pie = d3.layout.pie()
-	.sort(null)
-	.value(function(d) { return parseInt(d.keysize) });
+    .sort(null)
+    .value(function(d) { return parseInt(d.keysize) });
 
 var arc = d3.svg.arc()          // slices configuration
     .cornerRadius(5)            // rounding the slices
     .padAngle(0.005)            // space between slices
-	.outerRadius(function() { return radius * 0.8; } )  // size limit
-	.innerRadius(function() { return radius * 0.4; } ); // starting draw
+    .outerRadius(function() { return radius * 0.8; } )  // size limit
+    .innerRadius(function() { return radius * 0.4; } ); // starting draw
 
 var smpie = d3.layout.pie()
     .sort(null)
     .value(function(d) { return d.angle; });
 
-/* ------- END: Standard function definitions and configurations }}}-------*/
+/* ------- END: Standard function definitions and configurations -------*/
 
 /* ------- Reformating the input -------*/
 
-// Handle input file {{{
+// Handle input file
 d3.select("input.datafile")
     .on("change", function(d) {
         var file = d3.event.target.files[0];
@@ -188,7 +188,7 @@ d3.select("input.datafile")
             });
         };
         reader.readAsDataURL(file);
-    }); // }}}
+    });
 
 // Data default example
 d3.text("default-ringsh.txt", function(data) {
@@ -223,19 +223,19 @@ var updateChartLoaded = 0;
  * 
  */
 function updateChart(data) {
-	/* ------- PIE SLICES -------*/
-	var slice = RingImg.select(".slices").selectAll("path.slice")
+    /* ------- PIE SLICES -------*/
+    var slice = RingImg.select(".slices").selectAll("path.slice")
         .data(pie(data), function(d){ return d.data.label; });
 
-	slice.enter()
-		.insert("path")
-		.attr("fill", function(d) { return d.data.colour; })
+    slice.enter()
+        .insert("path")
+        .attr("fill", function(d) { return d.data.colour; })
         .attr("class", function(d) { return "slice myshrtsrv" + d.data.host; })
         .attr("startangle", function(d) { return d.startAngle; })
         .attr("endangle", function(d) { return d.endAngle; })
         .style('opacity', 0.8)
         .on('mouseover', function (d, i) {
-	        RingImg.select(".slices").selectAll("path.slice.myshrtsrv" + d.data.host)
+            RingImg.select(".slices").selectAll("path.slice.myshrtsrv" + d.data.host)
             .transition()
             .duration(500)
             .ease('elastic')
@@ -249,7 +249,7 @@ function updateChart(data) {
             });
         })
         .on('mouseleave', function (d, i) {
-	        RingImg.select(".slices").selectAll("path.slice.myshrtsrv" + d.data.host)
+            RingImg.select(".slices").selectAll("path.slice.myshrtsrv" + d.data.host)
             .transition()
             .duration(500)
             .ease('bounce')
@@ -258,28 +258,28 @@ function updateChart(data) {
         });
 
     slice
-		.transition().duration(1000)
-		.attrTween("d", function(d, i) {
-			this._current = this._current || d;
+        .transition().duration(1000)
+        .attrTween("d", function(d, i) {
+        this._current = this._current || d;
             var interpolate = d3.interpolate(this._current, d);
-			this._current = interpolate(0);
-			return function(t) {
-				return arc(interpolate(t));
-			};
+            this._current = interpolate(0);
+            return function(t) {
+                return arc(interpolate(t));
+            };
         });
 
-	slice.exit()
-		.remove();
+    slice.exit()
+        .remove();
 
-	/* ------- TOOLTIPS -------*/
-	var text = RingImg.select(".labels").selectAll("text")
+    /* ------- TOOLTIPS -------*/
+    var text = RingImg.select(".labels").selectAll("text")
         .data(pie(data), function(d){ return d.data.label; });
 
     function midAngle(d){
         return d.startAngle + (d.endAngle - d.startAngle)/2;
     }
 
-	var tooltipaction = RingImg.select(".slices").selectAll("path.slice")
+    var tooltipaction = RingImg.select(".slices").selectAll("path.slice")
         .data(pie(data), function(d){ return d.data.label; });
 
     tooltipaction
@@ -299,7 +299,7 @@ function updateChart(data) {
     text.exit()
         .remove();
     updateChartLoaded = 1;
-}; // }}}
+};
 
 /**
  * @param data
