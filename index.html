@@ -52,8 +52,8 @@
 
 <script>
 /* ------- Global variables -------*/
-var dataPie; // Store the datas for the pie chart
-var dataAngles; // Store de datas for the line angles
+var dataPie; // Store datas for the pie chart
+var dataAngles; // Store datas for the line angles
 var svg = d3.select("svg"),
     width = svg.attr("width"),
     height = svg.attr("height"),
@@ -99,7 +99,7 @@ var RingImg = svg.append("g").attr("class", "pie");
 
 /* Slices */
 RingImg.append("g")
-.attr("class", "slices");
+    .attr("class", "slices");
 
 /* Tooltip texts */
 RingImg.append("g")
@@ -142,6 +142,7 @@ svg.append("g")
  */
 svg.selectAll("g.lines, g.arrows, g.smcircle, g.lcircle, g.smslices, g.smpie")
     .attr("transform", "translate(" + originx + "," + originy + ") rotate(-90, 0, 0)");
+
 // No need to rotate the pie chart
 svg.selectAll("g.pie")
     .attr("transform", "translate(" + originx + "," + originy + ")");
@@ -168,8 +169,7 @@ var smpie = d3.layout.pie()
 /* ------- END: Standard function definitions and configurations -------*/
 
 /* ------- Reformating the input -------*/
-
-// Handle input file
+// Load input file
 d3.select("input.datafile")
     .on("change", function(d) {
         var file = d3.event.target.files[0];
@@ -190,16 +190,7 @@ d3.select("input.datafile")
         reader.readAsDataURL(file);
     });
 
-// Data default example
-d3.text("default-ringsh.txt", function(data) {
-    dataPie = formatInput(data);
-    updateChart(dataPie);
-    updateAngles(dataAngles);
-});
-
-// default lines view at init
-dataAngles = partsToAngles(coses.rcos2);
-updateAngles(dataAngles);
+// Load selected CoS angles
 d3.selectAll('input[name="radio-group"]')
     .on("change", function() {
         labelType = this.id
@@ -207,9 +198,19 @@ d3.selectAll('input[name="radio-group"]')
         updateAngles(dataAngles);
     });
 
-/* lock wait for the "updateChart" function, to run before updateAngles */
-var updateChartLoaded = 0;
+// Default data
+d3.text("default-ringsh.txt", function(data) {
+    dataPie = formatInput(data);
+    updateChart(dataPie);
+    updateAngles(dataAngles);
+});
 
+// Default CoS angles
+dataAngles = partsToAngles(coses.rcos2);
+updateAngles(dataAngles);
+
+/* lock wait for the "updateChart" function, wait for data to be computed before running updateAngles */
+var updateChartLoaded = 0;
 
 /**
  * @param data
