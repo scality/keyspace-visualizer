@@ -78,8 +78,14 @@ var colorsAvailable = [
     "#911eb4", "#46f0f0", "#f032e6", "#d2f53c", "#fabebe",
     "#008080", "#e6beff", "#aa6e28", "#fffac8", "#800000",
     "#aaffc3", "#808000", "#ffd8b1", "#000080", "#808080",
-    "#FFFFFF", "#000000"
+    "#FFFFFF"
 ]
+//increase the number of available colors
+var n = colorsAvailable.length;
+var x=-1; while(++x < n) {
+    var newcolor = LightenDarkenColor(colorsAvailable[x], 50);
+    colorsAvailable.push(newcolor);
+}
 
 /* List of predefined angles */
 var coses = {
