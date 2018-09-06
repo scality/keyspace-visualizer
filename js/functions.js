@@ -206,16 +206,21 @@ function getShortName(nodeName) {
  *
  */
 function computeRange(data) {
-    var ringSizeLimit = parseInt("0x" + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    var ringSizeLimit = new BigNumber("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
     var n = data.length;
+    var keysize, cur, prv, lst;
 
     var x = -1; while(++x < n) {
         if(x == 0) { // First element, we need to calcul the range from the last element in the array
-            data[x].keysize = ringSizeLimit - data[n-1].key + data[x].key;
+            cur = new BigNumber(data[x].nativekey, 16);
+            lst = new BigNumber(data[n-1].nativekey, 16);
+            data[x].keysize = ringSizeLimit.minus(lst).plus(cur);
         } else { // need to compare with the previous element
-            data[x].keysize = data[x].key - data[x - 1].key;
+            cur = new BigNumber(data[x].nativekey, 16);
+            prv = new BigNumber(data[x-1].nativekey, 16);
+            data[x].keysize = cur.minus(prv);
         }
-        data[x].perc = data[x].keysize / ringSizeLimit;
+        data[x].perc = data[x].keysize.dividedBy(ringSizeLimit).toNumber();
     }
     return data;
 };
