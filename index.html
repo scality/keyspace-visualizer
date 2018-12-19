@@ -43,11 +43,11 @@
             <li>Remove a slice when clicking on it, and rearrange the pie.</li>
             <li>Find a way to represent sites/diskgroups.</li>
             <li>Extend the large pie slice to the small pie when a line is over.</li>
-            <li>Refactor the code to make it more readable.</li>
         </ul>
     </div>
-    <div class="success">Color scheme updated.</div>
-    <div class="success">The small pie in center is now updated with the appopriate colors.</div>
+    <div class="success">Color scheme updated (Now 42 colors available).</div>
+    <div class="success">Fix bug with shadow nodes: increase number precision.</div>
+    <div class="success">Code refactored: more readable + comments.</div>
 
     <!-- Hidden Tooltip div -->
     <div class="tooltip"></div>
@@ -81,10 +81,14 @@ var colorsAvailable = [
     "#FFFFFF"
 ]
 //increase the number of available colors
+var lighten_degrees = [50, 75, 25, 66, 33];
 var n = colorsAvailable.length;
-var x=-1; while(++x < n) {
-    var newcolor = LightenDarkenColor(colorsAvailable[x], 50);
-    colorsAvailable.push(newcolor);
+var m = lighten_degrees.length;
+var y=-1; while(++y < m) {
+    var x=-1; while(++x < n) {
+        var newcolor = LightenDarkenColor(colorsAvailable[x], lighten_degrees[y]);
+        colorsAvailable.push(newcolor);
+    }
 }
 
 /* List of predefined angles */
@@ -167,7 +171,7 @@ var pie = d3.layout.pie()
 
 var arc = d3.svg.arc()          // slices configuration
     .cornerRadius(5)            // rounding the slices
-    .padAngle(0.005)            // space between slices
+    .padAngle(0.0005)            // space between slices
     .outerRadius(function() { return radius * 0.8; } )  // size limit
     .innerRadius(function() { return radius * 0.4; } ); // starting draw
 

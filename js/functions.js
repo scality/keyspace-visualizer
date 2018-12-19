@@ -139,6 +139,7 @@ function partsToAngles(data) {
  *
  */
 function formatInput(ringData) {
+    var numberOfColors = colorsAvailable.length;
     // 1.
     data = convertRingsh(ringData)
 
@@ -156,7 +157,11 @@ function formatInput(ringData) {
 
         if(!(data.host in hostColor)) {
             var sz = Object.keys(hostColor).length
-            hostColor[data.host] = colorsAvailable[sz];
+            if( sz >numberOfColors ) {
+                hostColor[data.host] = "white";
+            } else {
+                hostColor[data.host] = colorsAvailable[sz];
+            }
         }
         //key = hexPadded(data.key, 40);
         data.colour = hostColor[data.host];
