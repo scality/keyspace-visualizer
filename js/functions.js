@@ -167,7 +167,7 @@ function formatInput(ringData) {
       }
       //key = hexPadded(data.key, 40);
       data.colour = hostColor[data.host];
-      data.label = data.server + "<br/>" + data.nativekey + "<br/>" + data.colour;
+      data.label = data.server + "<br/>" + data.nativekey + "<br/>" + data.perc.toPrecision(3) + "%";
    });
 
    // 5. compute the space used per server
