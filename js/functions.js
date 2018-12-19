@@ -140,16 +140,16 @@ function partsToAngles(data) {
  */
 function formatInput(ringData) {
    var numberOfColors = colorsAvailable.length;
-   // 1.
+   // 1. convert ringData to a manipulable format
    data = convertRingsh(ringData)
 
-   // 2.
+   // 2. sort the datas by key
    var ringkeysSorted = sortByKeys(data);
 
-   // 3.
+   // 3. calculate the range between each keys (size & %)
    computeRange(ringkeysSorted);
 
-   // 4.
+   // 4. pick up a color per server
    var hostColor = {};
    ringkeysSorted.forEach(function (data) {
       // add the shortname in the array
@@ -168,7 +168,8 @@ function formatInput(ringData) {
       data.label = data.server + "<br/>" + data.nativekey + "<br/>" + data.colour;
    });
 
-   // 5. use the previous hostColor dict to filter per host
+   // 5. compute the space used per server
+   // use the previous hostColor dict to filter per host
    var servstats = []
    var servlist = Object.keys(hostColor);
    servlist.forEach(function (data) {
@@ -179,7 +180,7 @@ function formatInput(ringData) {
       servstats.push({ hostname: data, keysizes: b, percs: c, color: d });
    });
 
-   // 6.
+   // 6. use the computed datas to write the legend table
    writeLegend2(ringkeysSorted, servstats)
    return ringkeysSorted;
 };
