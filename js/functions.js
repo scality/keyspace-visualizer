@@ -34,8 +34,10 @@ function degreeToRadian(degree) {
  * @return the arrayOfKeys array sorted by object.key
  */
 function sortByKeys(arrayOfKeys) {
-   return arrayOfKeys.sort(function (a, b) {
-      return d3.ascending(a.key, b.key);
+   return arrayOfKeys.sort(function (ak, bk) {
+      a = new BigNumber(ak.key);
+      b = new BigNumber(bk.key)
+      return a.isLessThan(b) ? new BigNumber(-1) : a.isGreaterThan(b) ? new BigNumber(1) : a.isGreaterThanOrEqualTo(b) ? new BigNumber(0) : new BigNumber(NaN);
    });
 }
 
