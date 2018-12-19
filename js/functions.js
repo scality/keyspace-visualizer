@@ -35,9 +35,9 @@ function degreeToRadian(degree) {
  */
 function sortByKeys(arrayOfKeys) {
    return arrayOfKeys.sort(function (ak, bk) {
-      a = new BigNumber(ak.key);
-      b = new BigNumber(bk.key)
-      return a.isLessThan(b) ? new BigNumber(-1) : a.isGreaterThan(b) ? new BigNumber(1) : a.isGreaterThanOrEqualTo(b) ? new BigNumber(0) : new BigNumber(NaN);
+      a = new BigNumber(ak.nativekey, 16);
+      b = new BigNumber(bk.nativekey, 16)
+      return a.isLessThan(b) ? -1 : a.isGreaterThan(b) ? 1 : a.isGreaterThanOrEqualTo(b) ? 0 : NaN;
    });
 }
 
@@ -177,7 +177,7 @@ function formatInput(ringData) {
    servlist.forEach(function (data) {
       var a = ringkeysSorted.filter(({ host }) => host == data);
       var b = a.reduce((sum, value) => sum + value.keysize, 0);
-      var c = a.reduce((sum, value) => sum + value.perc, 0);
+      var c = a.reduce((sum, value) => sum.plus(value.perc), new BigNumber(0));
       var d = hostColor[data];
       servstats.push({ hostname: data, keysizes: b, percs: c, color: d });
    });
@@ -285,10 +285,9 @@ function writeLegend2(data, rawstats) {
             if (++cntemp > colnumbers) { ++colnumbers; }
             myrow.append("td")
                .style("border-top", "4px solid " + d.color)
-               .text(d3.format(".2%")(e.perc))
+               .text(d3.format(".2%")(e.perc.toPrecision(5).toString(10)))
          }
       })
-
    })
    d3.select("th#members").attr("colspan", colnumbers);
 }
