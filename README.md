@@ -4,4 +4,5 @@
 - npm install
 
 **get the configuration from GruntFile.js**
+- npm install -g grunt
 - grunt
