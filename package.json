@@ -1,0 +1,11 @@
+{
+  "name": "Keyspace-Visualizer",
+  "version": "0.1.0",
+  "author": "Cedrick GAILLARD",
+  "private": true,
+  "devDependencies": {
+    "grunt": "*",
+    "grunt-inline": "*",
+    "matchdep": "*"
+  }
+}
