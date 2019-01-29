@@ -28,14 +28,21 @@
         </div>
     </div>
 
-    <div class="info">Upload a ringsh.txt file to vizualize your keyspace.</div>
+    <div class="info">
+        <p>
+            Upload a ringsh.txt file to vizualize your keyspace.<br/>
+            Command to Generate a ringsh.txt format from a runnng ring:
+        </p>
+        <code>ringsh supervisor ringStatus DATA |grep Node: |awk '{split($3,n,&quot;:&quot;);printf(&quot;supervisor nodeAssignId ring %s %s %s\n&quot;, n[1], n[2], $4)}'</code>
+    </div>
 
     <div id="wrapper">
         <div class="svg">
             <svg width="1200" height="1200"></svg>
         </div>
 
-        <div id="infos"></div>
+        <div id="infos">
+        </div>
     </div>
 
     <div class="warning">TODO
