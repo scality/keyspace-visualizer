@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "author": "Cedrick GAILLARD",
   "private": true,
+  "scripts": {
+    "build": "grunt",
+    "build_verbose": "grunt -v"
+  },
   "devDependencies": {
     "grunt": "*",
     "grunt-inline": "*",
